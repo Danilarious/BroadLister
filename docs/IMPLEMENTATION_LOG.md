@@ -572,3 +572,107 @@ Phase 1 implemented the local data model foundation, initial SQLite migration, F
 ### Next Recommended Action
 
 - Commit the DB-path correction and Phase 1 exit log, push, tag `phase-1-complete`, then proceed to Phase 2 plan and implementation.
+
+---
+
+## 2026-05-08T12:51:52-07:00 — Phase 2 Plan
+
+### Action
+
+Started branch `phase-2-ui` from Phase 1 completion. Re-read the UI/workflow model for Phase 2 scope.
+
+### Plan
+
+Build the operator-facing SPA over the existing Phase 1 API:
+
+- Global navigation and always-visible client switcher.
+- Dashboard attention widgets using review queue and global record counts.
+- Journalist, outlet, article, and tag directory screens with search/filter, table views, selected detail panels, and provenance pop-out affordance.
+- Review queue UI with approve/reject actions.
+- CSV import wizard with inline mapping and post-import review scope.
+- Single-URL ingest form using operator-provided HTML snapshots.
+- Empty states, validation error rendering, keyboard shortcuts for review queue actions.
+
+### Files Expected To Change
+
+- `apps/web/src/App.tsx`
+- `apps/web/src/styles.css`
+- `apps/web/src/api.ts`
+- `apps/web/src/types.ts`
+- `apps/web/src/components/`
+- `apps/web/src/screens/`
+- `apps/web/src/utils/`
+- `apps/web/test/`
+
+### Dependencies
+
+- No new runtime dependency planned. Use built-in `fetch`, React state, and existing Vite/React stack.
+
+### Ports / Boundaries
+
+- Web remains on port `4100`.
+- API remains on port `3021`.
+- No systemd.
+- No global env writes.
+- No outbound messaging, Gmail, webhook, or external outreach code.
+- No runtime dependency on ProjectReckoner, TaskReckoner, Bucketer, Tabulator, BusyIntern, Hermes, or sevenfold.
+
+### Review Prompts
+
+- Hermes review: not required; no port, stack, service boundary, external integration, runtime coupling, or systemd change.
+- sevenfold review: not required; Phase 2 does not alter campaign workspace shape, export shape, cross-client safety guards, or ship outreach functionality.
+
+### Rollback Notes
+
+- Revert Phase 2 commits on branch `phase-2-ui`. Phase 1 tag remains available as `phase-1-complete`.
+
+### Next Recommended Action
+
+- Implement Phase 2 UI in small checkpoints, verify, push, then tag `phase-2-complete`.
+
+---
+
+## 2026-05-08T12:54:56-07:00 — Phase 2 UI Checkpoint
+
+### Action
+
+Implemented the Phase 2 operator UI over the Phase 1 API: global directories for journalists/outlets/articles/tags, detail panels with provenance-pop-out affordance, review queue with approve/reject actions and keyboard shortcuts, CSV import wizard, single-URL HTML snapshot ingest, dashboard metrics, active client selector, and explicit safety guardrail copy.
+
+### Files Changed
+
+- `apps/web/src/App.tsx`
+- `apps/web/src/api.ts`
+- `apps/web/src/components/DetailPanel.tsx`
+- `apps/web/src/components/RecordTable.tsx`
+- `apps/web/src/components/ReviewQueue.tsx`
+- `apps/web/src/screens/DirectoryScreen.tsx`
+- `apps/web/src/screens/ImportScreen.tsx`
+- `apps/web/src/styles.css`
+- `apps/web/src/types.ts`
+- `apps/web/src/utils/format.ts`
+
+### Commands Run
+
+- `pnpm verify && pnpm check:global-models && pnpm check:denylist && pnpm build`: exit 0
+
+### Tests Run
+
+- API tests: 9 passed, 1 todo placeholder.
+- Web tests: no files found, exited 0 via `--passWithNoTests`.
+- Typecheck: passed.
+- Lint: passed.
+- Global model scope guard: passed.
+- Dependency deny-list guard: passed.
+- Build: passed.
+
+### Blockers / Stopping Conditions
+
+- None.
+
+### Rollback Notes
+
+- Revert the upcoming Phase 2 UI commit to return to the Phase 1 web shell.
+
+### Next Recommended Action
+
+- Commit and push Phase 2 UI checkpoint, capture Phase 2 backup, tag `phase-2-complete`, then proceed to Phase 3 plan and implementation.
