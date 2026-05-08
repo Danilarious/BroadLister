@@ -475,3 +475,44 @@ Added deterministic single-URL ingest proposal support using operator-provided H
 ### Next Recommended Action
 
 - Commit checkpoint 2 and push branch.
+
+---
+
+## 2026-05-08T12:48:21-07:00 — Phase 1 Checkpoint 3 CRUD Validation Slice
+
+### Action
+
+Added explicit Zod request schemas for Phase 1 CRUD routes, normalized JSON-shaped fields, enforced contact-method subject scope, normalized validation errors to HTTP 400, and added smoke coverage for invalid contact scope.
+
+### Files Changed
+
+- `apps/api/src/app.ts`
+- `apps/api/src/core/validation/requests.ts`
+- `apps/api/src/routes/crud.ts`
+- `apps/api/test/api-smoke.test.ts`
+
+### Commands Run
+
+- `pnpm verify && pnpm check:global-models && pnpm check:denylist && pnpm build`: exit 0
+
+### Tests Run
+
+- API tests: 8 passed, 1 todo placeholder.
+- Web tests: no files found, exited 0 via `--passWithNoTests`.
+- Typecheck: passed.
+- Lint: passed.
+- Global model scope guard: passed.
+- Dependency deny-list guard: passed.
+- Build: passed.
+
+### Blockers / Stopping Conditions
+
+- None.
+
+### Rollback Notes
+
+- Revert the upcoming checkpoint commit to remove explicit CRUD request validation changes.
+
+### Next Recommended Action
+
+- Commit checkpoint 3 and push branch.

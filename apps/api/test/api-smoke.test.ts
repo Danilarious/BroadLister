@@ -41,5 +41,21 @@ describe("API smoke", () => {
     expect(response.statusCode).toBe(200);
     expect(response.json().display_name).toBe(`Smoke Reporter ${suffix}`);
   });
-});
 
+  it("rejects invalid contact method scope", async () => {
+    const app = await buildApp();
+    const response = await app.inject({
+      method: "POST",
+      url: "/contact-methods",
+      payload: {
+        subject_type: "journalist",
+        kind: "email",
+        value: "invalid@example.com"
+      }
+    });
+    await app.close();
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toContain("Exactly one of journalist_id or outlet_id is required");
+  });
+});
