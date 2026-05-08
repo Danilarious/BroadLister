@@ -58,4 +58,33 @@ describe("API smoke", () => {
     expect(response.statusCode).toBe(400);
     expect(response.body).toContain("Exactly one of journalist_id or outlet_id is required");
   });
+
+  it("creates review items from a CSV import", async () => {
+    const app = await buildApp();
+    const suffix = crypto.randomUUID();
+    const response = await app.inject({
+      method: "POST",
+      url: "/imports/csv",
+      payload: {
+        label: `Smoke import ${suffix}`,
+        csv: `Name,Outlet\nCSV Reporter ${suffix},CSV Outlet ${suffix}\n`,
+        mapping: {
+          Name: "display_name",
+          Outlet: "outlet_name"
+        }
+      }
+    });
+
+    expect(response.statusCode).toBe(201);
+    const batch = response.json();
+    const reviewResponse = await app.inject({
+      method: "GET",
+      url: `/review?source_import_batch_id=${batch.id}`
+    });
+
+    await app.close();
+
+    expect(reviewResponse.statusCode).toBe(200);
+    expect(reviewResponse.json()).toHaveLength(2);
+  });
 });
