@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { approveReview, createResource, listResource, listReviews, rejectReview } from "./api.js";
 import { ReviewQueue } from "./components/ReviewQueue.js";
+import { CampaignScreen } from "./screens/CampaignScreen.js";
 import { DirectoryScreen } from "./screens/DirectoryScreen.js";
 import { ImportScreen } from "./screens/ImportScreen.js";
 import type { ApiRecord, Client, ResourceName, ReviewItem } from "./types.js";
 
-type Screen = ResourceName | "dashboard" | "imports" | "review";
+type Screen = ResourceName | "dashboard" | "imports" | "review" | "campaigns";
 
 const navItems: Array<{ id: Screen; label: string }> = [
   { id: "dashboard", label: "Dashboard" },
@@ -13,6 +14,7 @@ const navItems: Array<{ id: Screen; label: string }> = [
   { id: "outlets", label: "Outlets" },
   { id: "articles", label: "Articles" },
   { id: "tags", label: "Tags" },
+  { id: "campaigns", label: "Campaigns" },
   { id: "imports", label: "Imports" },
   { id: "review", label: "Review Queue" }
 ];
@@ -164,7 +166,10 @@ export function App() {
           refreshReviews(batchId).then(() => setScreen("review")).catch((caught: Error) => setError(caught.message));
         }} />
       )}
+
+      {screen === "campaigns" && (
+        <CampaignScreen activeClient={activeClient} />
+      )}
     </main>
   );
 }
-

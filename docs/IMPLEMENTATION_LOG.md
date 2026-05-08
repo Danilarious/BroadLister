@@ -728,3 +728,112 @@ Phase 2 added a functional operator SPA for global record browsing/editing workf
 ### Next Recommended Action
 
 - Commit this exit log, tag `phase-2-complete`, push tag, then proceed to Phase 3 plan and implementation.
+
+---
+
+## 2026-05-08T12:56:05-07:00 — Phase 3 Plan
+
+### Action
+
+Started branch `phase-3-overlays` from Phase 2 completion and re-read the roadmap Phase 3 scope.
+
+### Plan
+
+Add first-class campaign overlays and exports:
+
+- API scoped campaign workspace route that always filters by `client_id`.
+- Campaign/list/contact overlay helpers for list building.
+- Campaign constraints structured UI over `Campaign.constraints_json`.
+- CampaignContact overlay editor with target score, rationale, pitch angle, exclusion, approval state, and narrative fit fields.
+- Relationship/status panel for active client on journalist detail.
+- ClientApproval workflow and readiness chips.
+- Export routes for media-list CSV, markdown brief, source audit, and approval log.
+- Replace Phase 1 cross-client placeholder with a real integration test that inserts two clients and fails if scoped workspace/export routes leak the other client's overlay fields.
+
+### Files Expected To Change
+
+- `apps/api/src/routes/campaign-workspace.ts`
+- `apps/api/src/routes/exports.ts`
+- `apps/api/src/services/exports.ts`
+- `apps/api/test/cross-client-leakage.test.ts`
+- `apps/web/src/App.tsx`
+- `apps/web/src/api.ts`
+- `apps/web/src/screens/CampaignScreen.tsx`
+- `apps/web/src/styles.css`
+
+### Dependencies
+
+- No new runtime dependency planned.
+
+### Ports / Boundaries
+
+- API remains `3021`; web remains `4100`.
+- No systemd.
+- No global env writes.
+- No outbound messaging, Gmail, webhook, notification, send queue, scheduler, or automation.
+- No runtime dependency on ProjectReckoner, TaskReckoner, Bucketer, Tabulator, BusyIntern, Hermes, or sevenfold.
+
+### Review Prompts
+
+- Hermes review: not required; no stack, port, service-boundary, external integration, runtime coupling, or systemd change.
+- sevenfold review prompt drafted: not required by the current gate criteria because export shapes follow the planning docs and do not alter Sevenfold folder conventions. If Bo wants explicit domain signoff, pause before MVP declaration.
+
+### Rollback Notes
+
+- Revert Phase 3 commits on branch `phase-3-overlays`. Phase 2 tag remains available as `phase-2-complete`.
+
+### Next Recommended Action
+
+- Implement Phase 3 overlays, exports, and real cross-client leakage test, verify, push, tag `phase-3-complete`, then stop at MVP boundary and report.
+
+---
+
+## 2026-05-08T13:00:12-07:00 — Phase 3 Overlay/Export Checkpoint
+
+### Action
+
+Implemented scoped campaign workspace API, export routes, export service, real cross-client leakage integration test, campaign workspace UI, overlay editor, campaign constraints view, ClientApproval creation, and export links for media CSV, brief markdown, source audit, and approval log.
+
+### Files Changed
+
+- `apps/api/src/app.ts`
+- `apps/api/src/routes/campaign-workspace.ts`
+- `apps/api/src/routes/exports.ts`
+- `apps/api/src/services/exports.ts`
+- `apps/api/test/cross-client-leakage.test.ts`
+- `apps/api/test/cross-client-leakage.placeholder.test.ts`
+- `apps/web/src/App.tsx`
+- `apps/web/src/api.ts`
+- `apps/web/src/screens/CampaignScreen.tsx`
+- `apps/web/src/styles.css`
+- `apps/web/src/types.ts`
+
+### Commands Run
+
+- `pnpm verify && pnpm check:global-models && pnpm check:denylist && pnpm build`: exit 0
+
+### Tests Run
+
+- API tests: 10 passed, including real cross-client leakage integration test.
+- Web tests: no files found, exited 0 via `--passWithNoTests`.
+- Typecheck: passed.
+- Lint: passed.
+- Global model scope guard: passed.
+- Dependency deny-list guard: passed.
+- Build: passed.
+
+### Self-Verification
+
+- Cross-client leakage test is now real and passing.
+- Dependency deny-list guard passes.
+- Global Prisma model `client_id` guard passes.
+- Export routes are scoped by `client_id`; trying to export Client B's list through Client A returns 404 without leaking Client B private overlay text.
+- No outbound outreach, Gmail, webhook, send queue, scheduler, or notification code added.
+
+### Rollback Notes
+
+- Revert the upcoming Phase 3 checkpoint commit to remove campaign workspace, exports, and real leakage test.
+
+### Next Recommended Action
+
+- Commit/push checkpoint, capture Phase 3 exit backup, rerun final verification, tag `phase-3-complete`, then stop at MVP boundary.

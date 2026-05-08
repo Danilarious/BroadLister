@@ -7,6 +7,8 @@ import { registerHealthRoutes } from "./routes/health.js";
 import { registerImportRoutes } from "./routes/imports.js";
 import { registerReviewRoutes } from "./routes/review.js";
 import { registerUrlIngestRoutes } from "./routes/url-ingest.js";
+import { registerCampaignWorkspaceRoutes } from "./routes/campaign-workspace.js";
+import { registerExportRoutes } from "./routes/exports.js";
 
 export async function buildApp() {
   const app = Fastify({ logger: true });
@@ -23,5 +25,7 @@ export async function buildApp() {
   await registerReviewRoutes(app);
   await registerImportRoutes(app);
   await registerUrlIngestRoutes(app);
+  await registerCampaignWorkspaceRoutes(app);
+  await registerExportRoutes(app);
   return app;
 }

@@ -1,4 +1,4 @@
-import type { ApiRecord, ImportBatch, ResourceName, ReviewItem } from "./types.js";
+import type { ApiRecord, CampaignWorkspace, ImportBatch, ResourceName, ReviewItem } from "./types.js";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`/api${path}`, {
@@ -59,3 +59,28 @@ export function createResource(resource: ResourceName | "clients", payload: Reco
   });
 }
 
+export function createOverlayResource(resource: "campaigns" | "campaign-lists" | "campaign-contacts" | "outreach-status" | "outreach-events" | "client-approvals", payload: Record<string, unknown>): Promise<ApiRecord> {
+  return request<ApiRecord>(`/${resource}`, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function updateOverlayResource(resource: "campaigns" | "campaign-lists" | "campaign-contacts" | "outreach-status", id: string, payload: Record<string, unknown>): Promise<ApiRecord> {
+  return request<ApiRecord>(`/${resource}/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function getWorkspace(clientId: string): Promise<CampaignWorkspace> {
+  return request<CampaignWorkspace>(`/workspace/${clientId}`);
+}
+
+export function exportUrl(clientId: string, listId: string, kind: "media-list.csv" | "brief.md"): string {
+  return `/api/exports/${clientId}/campaign-lists/${listId}/${kind}`;
+}
+
+export function clientExportUrl(clientId: string, kind: "source-audit.md" | "approval-log.md"): string {
+  return `/api/exports/${clientId}/${kind}`;
+}

@@ -31,10 +31,19 @@ button {
 }
 
 button.secondary,
-.nav button {
+.nav button,
+.button-link {
   background: rgba(255, 255, 255, 0.5);
   border: 1px solid rgba(29, 32, 28, 0.16);
   color: #1d201c;
+}
+
+.button-link {
+  border-radius: 999px;
+  font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+  font-weight: 800;
+  padding: 10px 16px;
+  text-decoration: none;
 }
 
 button.active,
@@ -172,12 +181,20 @@ pre {
 }
 
 .hero aside,
-.guardrail {
+.guardrail,
+.constraints-card {
   border: 1px solid rgba(188, 103, 60, 0.28);
   border-radius: 18px;
   display: grid;
   gap: 10px;
   padding: 16px;
+}
+
+.constraints-card {
+  background: rgba(255, 255, 255, 0.48);
+  margin-bottom: 16px;
+  max-height: 330px;
+  overflow: auto;
 }
 
 .dashboard {
@@ -206,7 +223,8 @@ pre {
 
 .workspace-grid,
 .review-layout,
-.import-grid {
+.import-grid,
+.campaign-grid {
   align-items: start;
   display: grid;
   gap: 18px;
@@ -215,6 +233,10 @@ pre {
 
 .import-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.campaign-grid {
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.8fr);
 }
 
 .section-header {
@@ -346,4 +368,3 @@ pre {
     position: static;
   }
 }
-
