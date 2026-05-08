@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "BROADLISTER_DB=file:../../data/broadlister.sqlite tsx watch src/server.ts",
+    "dev": "BROADLISTER_DB=file:/home/bxby/development/BroadLister/data/broadlister.sqlite tsx watch src/server.ts",
     "build": "tsup src/server.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "BROADLISTER_DB=file:../../data/broadlister.sqlite vitest run",
-    "prisma": "BROADLISTER_DB=file:../../data/broadlister.sqlite prisma",
-    "backup:db": "BROADLISTER_DB=file:../../data/broadlister.sqlite tsx src/scripts/backup-db.ts",
+    "test": "BROADLISTER_DB=file:/home/bxby/development/BroadLister/data/broadlister.sqlite vitest run",
+    "prisma": "BROADLISTER_DB=file:/home/bxby/development/BroadLister/data/broadlister.sqlite prisma",
+    "backup:db": "BROADLISTER_DB=file:/home/bxby/development/BroadLister/data/broadlister.sqlite tsx src/scripts/backup-db.ts",
     "check:global-models": "tsx src/scripts/check-global-models.ts",
     "check:denylist": "tsx src/scripts/check-dependency-denylist.ts"
   },

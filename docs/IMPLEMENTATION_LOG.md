@@ -516,3 +516,59 @@ Added explicit Zod request schemas for Phase 1 CRUD routes, normalized JSON-shap
 ### Next Recommended Action
 
 - Commit checkpoint 3 and push branch.
+
+---
+
+## 2026-05-08T12:51:01-07:00 — Phase 1 Exit Verification
+
+### Action
+
+Completed Phase 1 exit verification. Found and corrected SQLite path ambiguity: Prisma first created `apps/data/broadlister.sqlite` because the DB URL was relative to the Prisma schema path. Backed up the misplaced DB, switched scripts/config to the intended repo-local SQLite path, migrated the intended DB, and captured an exit backup.
+
+### Files Changed
+
+- `apps/api/package.json`
+- `apps/api/src/config.ts`
+
+### Commands Run
+
+- `pnpm --filter @broadlister/api prisma migrate dev`: exit 0
+- `pnpm backup:db`: exit 0; wrote `data/backups/broadlister-2026-05-08T19-50-34-245Z.sqlite`
+- `find /home/bxby/development/BroadLister -name 'broadlister.sqlite*' -o -name '*.sqlite'`: exit 0
+- `pnpm verify && pnpm check:global-models && pnpm check:denylist && pnpm build`: exit 0
+
+### Tests Run
+
+- API tests: 9 passed, 1 todo placeholder.
+- Web tests: no files found, exited 0 via `--passWithNoTests`.
+- Typecheck: passed.
+- Lint: passed.
+- Global model scope guard: passed.
+- Dependency deny-list guard: passed.
+- Build: passed.
+
+### Self-Verification
+
+- Dependency deny-list test passes.
+- Cross-client leakage placeholder exists for Phase 1.
+- Backup snapshot captured at `data/backups/broadlister-2026-05-08T19-50-34-245Z.sqlite`.
+- Misplaced DB backup captured at `data/backups/misplaced-apps-data-broadlister-20260508T124925.sqlite`.
+- Operational invariant spot-check passed: global Prisma models do not contain `client_id`.
+- No ProjectReckoner, BusyIntern, Hermes, agent-os, sevenfold, systemd, Google credential, Gmail, Drive, Calendar, Contacts, or client-folder files were modified.
+- No send-side dependency is present in the resolved tree.
+
+### Phase 1 Summary
+
+Phase 1 implemented the local data model foundation, initial SQLite migration, Fastify API, CRUD/search route skeletons, CSV import to review queue, single-URL ingest proposals using operator-provided HTML snapshots, review approve/reject flow, JSON validators for global sourced preferences/campaign constraints/narrative fit, backup script, dependency deny-list guard, global `client_id` static guard, and a minimal web shell.
+
+### Blockers / Stopping Conditions
+
+- None.
+
+### Rollback Notes
+
+- Revert Phase 1 commits through this checkpoint. Remove `data/broadlister.sqlite` and restore from `data/backups/broadlister-2026-05-08T19-50-34-245Z.sqlite` if DB rollback is needed.
+
+### Next Recommended Action
+
+- Commit the DB-path correction and Phase 1 exit log, push, tag `phase-1-complete`, then proceed to Phase 2 plan and implementation.
