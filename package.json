@@ -1,0 +1,33 @@
+{
+  "name": "broadlister",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.0.8",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @broadlister/api --filter @broadlister/web dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "verify": "pnpm typecheck && pnpm lint && pnpm test",
+    "db:generate": "pnpm --filter @broadlister/api prisma generate",
+    "db:migrate": "pnpm --filter @broadlister/api prisma migrate dev",
+    "backup:db": "pnpm --filter @broadlister/api backup:db",
+    "check:global-models": "pnpm --filter @broadlister/api check:global-models",
+    "check:denylist": "pnpm --filter @broadlister/api check:denylist"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.26.0",
+    "eslint": "^9.26.0",
+    "typescript-eslint": "^8.32.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ]
+  }
+}
