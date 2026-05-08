@@ -837,3 +837,58 @@ Implemented scoped campaign workspace API, export routes, export service, real c
 ### Next Recommended Action
 
 - Commit/push checkpoint, capture Phase 3 exit backup, rerun final verification, tag `phase-3-complete`, then stop at MVP boundary.
+
+---
+
+## 2026-05-08T13:01:02-07:00 — Phase 3 Exit / MVP Boundary
+
+### Action
+
+Committed Phase 3 checkpoint as `201149d feat: add campaign overlays and scoped exports`, pushed branch `phase-3-overlays`, captured MVP boundary backup, and reran final verification.
+
+### Files Changed
+
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `git add . && git commit -m "feat: add campaign overlays and scoped exports"`: exit 0
+- `pnpm verify && pnpm check:global-models && pnpm check:denylist`: exit 0
+- `git push -u origin phase-3-overlays`: exit 0
+- `pnpm backup:db`: exit 0; wrote `data/backups/broadlister-2026-05-08T20-00-43-278Z.sqlite`
+- `pnpm verify && pnpm check:global-models && pnpm check:denylist && pnpm build`: exit 0
+
+### Tests Run
+
+- API tests: 10 passed, including real cross-client leakage integration test.
+- Web tests: no files found, exited 0 via `--passWithNoTests`.
+- Typecheck: passed.
+- Lint: passed.
+- Global model scope guard: passed.
+- Dependency deny-list guard: passed.
+- Build: passed.
+
+### Self-Verification
+
+- Cross-client leakage integration test passes and gates Phase 3 exit.
+- Dependency deny-list test passes.
+- Backup snapshot captured at `data/backups/broadlister-2026-05-08T20-00-43-278Z.sqlite`.
+- Operational invariant spot-check passed: global Prisma models do not contain `client_id`.
+- Campaign overlay data remains scoped through workspace/export APIs.
+- No outbound outreach, Gmail, webhook, notification, send queue, scheduler, systemd, or external runtime coupling introduced.
+
+### Phase 3 Summary
+
+Phase 3 added campaign workspace APIs, client-scoped overlay UI, list building, structured campaign constraints storage/display, campaign contact overlay editing, narrative fit editor, ClientApproval creation, media-list CSV export, markdown brief export, source-audit export, approval-log export, and a real cross-client leakage integration test.
+
+### Blockers / Stopping Conditions
+
+- MVP boundary reached. Phase 4 and Phase 5 are not pre-approved and require a fresh planning pass.
+
+### Rollback Notes
+
+- Revert Phase 3 commits or return to tag `phase-2-complete`. Restore DB from `data/backups/broadlister-2026-05-08T20-00-43-278Z.sqlite` if needed.
+
+### Next Recommended Action
+
+- Commit this MVP boundary log, tag `phase-3-complete`, push tag, and stop for Bo's review.
