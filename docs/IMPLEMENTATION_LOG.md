@@ -427,3 +427,51 @@ Bo confirmed repository invitation/access for `bxb0xbxb`. Retried push and succe
 ### Next Recommended Action
 
 - Commit this log update, push it, then continue Phase 1 implementation.
+
+---
+
+## 2026-05-08T12:45:51-07:00 — Phase 1 Checkpoint 2 URL Ingest Slice
+
+### Action
+
+Added deterministic single-URL ingest proposal support using operator-provided HTML snapshots, not live crawling. Added route `/imports/url`, metadata extraction helper, blocked review behavior for article proposals that require outlet approval first, and API smoke tests for health and review application.
+
+### Files Changed
+
+- `apps/api/src/app.ts`
+- `apps/api/src/adapters/url/extract.ts`
+- `apps/api/src/routes/url-ingest.ts`
+- `apps/api/src/services/review.ts`
+- `apps/api/test/api-smoke.test.ts`
+- `apps/api/test/url-extract.test.ts`
+
+### Commands Run
+
+- `pnpm verify && pnpm check:global-models && pnpm check:denylist && pnpm build`: exit 0
+
+### Tests Run
+
+- API tests: 7 passed, 1 todo placeholder.
+- Web tests: no files found, exited 0 via `--passWithNoTests`.
+- Typecheck: passed.
+- Lint: passed.
+- Global model scope guard: passed.
+- Dependency deny-list guard: passed.
+- Build: passed.
+
+### Review Prompts
+
+- Hermes review: not required; no new service boundary, port, external integration, runtime coupling, or systemd posture change.
+- sevenfold review: not required; no campaign workspace/export shape/cross-client relaxation/outreach functionality.
+
+### Blockers / Stopping Conditions
+
+- None.
+
+### Rollback Notes
+
+- Revert the upcoming checkpoint commit to remove URL ingest proposal support.
+
+### Next Recommended Action
+
+- Commit checkpoint 2 and push branch.
