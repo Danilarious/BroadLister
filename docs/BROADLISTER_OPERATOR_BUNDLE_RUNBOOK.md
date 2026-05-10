@@ -11,6 +11,7 @@ Use it when:
 - You want a reviewed public article/outlet/byline/tag/provenance bundle for later Tabulator testing.
 - You need a local handoff artifact for offline adapter development.
 - You want to inspect which reviewed BroadLister media facts are export-safe.
+- You want to run BroadLister's local offline dry-run validator before any future Tabulator-side import work.
 
 Do not use it for:
 
@@ -138,7 +139,9 @@ Note: forbidden strings may appear inside `redaction_report.denied_fields_checke
 
 ## Future Tabulator Import Relationship
 
-The planned next step is Tabulator-side offline adapter work:
+BroadLister now includes a local in-memory dry-run validator for downloaded bundle payloads. It validates schema, forbidden fields, provenance, duplicate/idempotency keys, and the proposed Tabulator mapping plan without writing files or calling Tabulator.
+
+The planned next step is still Tabulator-side offline adapter work:
 
 1. Validate a local BroadLister bundle file.
 2. Produce a dry-run operation plan.

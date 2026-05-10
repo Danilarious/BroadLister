@@ -2001,3 +2001,63 @@ Started branch `phase-4-bucketer-bridge-planning`. Paused implementation and ran
 ### Next Recommended Action
 
 - Commit, tag `phase-4-bucketer-bridge-planning-complete`, and push branch/tag.
+
+---
+
+## 2026-05-10T14:34:44-07:00 — Tabulator Offline Dry Run
+
+### Action
+
+Started branch `phase-4-tabulator-offline-dry-run`. Determined the first safe slice belongs in BroadLister because it validates BroadLister-generated bundle payloads and produces an in-memory Tabulator-shaped dry-run plan without importing Tabulator code or writing Tabulator records. Added a pure offline validator/dry-run service and tests.
+
+### Files Changed
+
+- `apps/api/src/services/tabulator-offline-dry-run.ts`
+- `apps/api/test/tabulator-offline-dry-run.test.ts`
+- `docs/BROADLISTER_TABULATOR_OFFLINE_IMPORT_PLAN.md`
+- `docs/BROADLISTER_OPERATOR_BUNDLE_RUNBOOK.md`
+- `docs/BROADLISTER_NEXT_DEVELOPMENT_PLAN.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `git checkout -b phase-4-tabulator-offline-dry-run`: exit 0
+- BroadLister required-doc/code inspection via local Node read-only scripts: exit 0
+- Tabulator repo read-only inspection via local Node scripts: exit 0
+- `pnpm --filter @broadlister/api typecheck`: exit 0
+- `pnpm --filter @broadlister/api test -- tabulator-offline-dry-run.test.ts`: exit 0
+- `pnpm verify`: exit 0
+- `pnpm check:global-models`: exit 0
+- `pnpm check:denylist`: exit 0
+- `pnpm build`: exit 0
+- `pnpm --filter @broadlister/api test -- tabulator-offline-dry-run.test.ts`: exit 0
+- `pnpm --filter @broadlister/api test -- tabulator-export-preview.test.ts`: exit 0
+- `pnpm --filter @broadlister/api test -- tabulator-export-preview-route.test.ts`: exit 0
+- `pnpm --filter @broadlister/api test -- cross-client-leakage.test.ts`: exit 0
+
+### Tests Run
+
+- New dry-run test command: pass; API suite reported 13 files, 67 tests passed.
+- Full verify: pass.
+- Global-model guard: pass.
+- Dependency deny-list guard: pass.
+- Build: pass.
+- Targeted dry-run/export/cross-client commands: pass.
+- API tests: 13 files, 67 tests passed.
+- Web unit tests: 2 files, 9 tests passed.
+
+### Hermes / Sevenfold
+
+- No review gate triggered. This is non-mutating, BroadLister-local, in-memory contract validation. No Tabulator API call, Tabulator runtime dependency, schema change, backend file writer, external write, contact export, or Bucketer implementation was added.
+
+### Blockers / Stopping Conditions
+
+- None. The dry-run remains advisory and does not create Tabulator records.
+
+### Rollback Notes
+
+- Revert the forthcoming commit. No database migration, route, UI, runtime dependency, backend file writer, Tabulator repo change, or external write was introduced.
+
+### Next Recommended Action
+
+- Commit, tag `phase-4-tabulator-offline-dry-run-complete`, and push branch/tag.

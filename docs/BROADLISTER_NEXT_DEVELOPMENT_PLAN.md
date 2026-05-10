@@ -2,22 +2,22 @@
 
 ## Recommended Next Phase
 
-Next implementation phase should remain `B2) Tabulator-side offline import adapter validate/dry-run`, after Bo reviews and approves the offline import plan. Bucketer bridge planning is now documented and should be reviewed before any Bucketer implementation begins, but it does not need to block Tabulator's offline safety layer.
+Next implementation phase should move to `B3) Tabulator-side offline adapter validate/dry-run`, after Bo reviews the BroadLister-local dry-run scaffold. BroadLister now validates and previews downloaded bundles in-memory; Tabulator still owns any real importer.
 
 The browser-validation and hardening pass added Playwright coverage, expanded API hardening tests, documented Tailscale access, and preserved the no-outreach and cross-client safety posture. The import-ingestion pass added deterministic, review-gated URL article ingestion and CSV contact imports. The reconciliation pass added deterministic duplicate matching, linked approval resolution, import batch filtering, defer/reject paths, and review queue context panels. No additional hardening block is currently severe enough to defer ontology planning.
 
 This planning package defines alignment contracts for ontology-core, Tabulator, and Bucketer. It does not hard-couple BroadLister to ProjectReckoner, Tabulator, TaskReckoner, Bucketer, Hermes, or sevenfold at runtime.
 
-Implemented branches: `phase-4-ontology-snapshot-import`, `phase-4-ontology-review-refinement`, `phase-4-tabulator-export-planning`, `phase-4-tabulator-export-tests`, `phase-4-tabulator-export-preview`, `phase-4-tabulator-export-preview-route`, `phase-4-tabulator-export-preview-ui`, `phase-4-tabulator-export-json-download`, and `phase-4-tabulator-offline-import-planning`. Current planning branch: `phase-4-bucketer-bridge-planning`.
+Implemented branches: `phase-4-ontology-snapshot-import`, `phase-4-ontology-review-refinement`, `phase-4-tabulator-export-planning`, `phase-4-tabulator-export-tests`, `phase-4-tabulator-export-preview`, `phase-4-tabulator-export-preview-route`, `phase-4-tabulator-export-preview-ui`, `phase-4-tabulator-export-json-download`, `phase-4-tabulator-offline-import-planning`, and `phase-4-bucketer-bridge-planning`. Current implementation branch: `phase-4-tabulator-offline-dry-run`.
 
 ## Objective
 
-Bridge A implements the smallest safe ontology snapshot intake plus local review refinement. Bridge B now has BroadLister-side reviewed-media preview and local JSON bundle download plus Tabulator offline import planning. Bridge C is now planned conceptually: Bucketer may nominate signal/article candidates for BroadLister review, and BroadLister may suggest Bucketer buckets, both file-first and review-gated.
+Bridge A implements the smallest safe ontology snapshot intake plus local review refinement. Bridge B now has BroadLister-side reviewed-media preview, local JSON bundle download, offline import planning, and a BroadLister-local in-memory validate/dry-run scaffold. Bridge C is planned conceptually: Bucketer may nominate signal/article candidates for BroadLister review, and BroadLister may suggest Bucketer buckets, both file-first and review-gated.
 
 ## Proposed Workstreams
 
-1. Build a Tabulator-side offline adapter that reads a local BroadLister bundle file.
-2. Start with `validate` and `dry_run` modes only; no commit mode until the plan output is stable.
+1. Build a Tabulator-side offline adapter that reads a local BroadLister bundle file and mirrors the BroadLister-local dry-run contract.
+2. Start with `validate` and `dry_run` modes only; no commit mode until the plan output is stable and reviewed.
 3. Map articles to Tabulator `Link`, source mappings to `ExternalSourceRecord`, tags to `Tag`/`LinkTag`, and provenance to `provenanceJson` or `ResearchArtifact`.
 4. Preserve no-contact-data and no-client-private-overlay rules at the Tabulator boundary.
 5. Keep direct BroadLister-to-Tabulator API writes deferred.

@@ -1,6 +1,12 @@
 # BroadLister Tabulator Offline Import Plan
 
-Status: planning only. No Tabulator runtime integration, BroadLister schema change, backend file writer, network call, contact export, or external write is implemented here.
+Status: BroadLister-local offline `validate_dry_run` is implemented as pure in-memory contract scaffolding. No Tabulator runtime integration, BroadLister schema change, backend file writer, network call, contact export, or external write is implemented here.
+
+Current implementation:
+
+- `apps/api/src/services/tabulator-offline-dry-run.ts` validates a `BroadListerReviewedMediaExportBundle.v1` payload and returns a deterministic `BroadListerTabulatorOfflineImportDryRun.v1` plan.
+- `apps/api/test/tabulator-offline-dry-run.test.ts` covers valid sample bundles, malformed bundles, forbidden contact/client-private fields, missing provenance, duplicate/idempotency keys, deterministic mapping, no network calls, no external writes, and no Tabulator runtime dependency.
+- The dry run is not a route, not a UI, not a CLI writer, and not a Tabulator importer.
 
 ## Current BroadLister Bundle Shape
 
@@ -89,7 +95,58 @@ Current Tabulator import posture:
 
 Implication: first implementation should be a Tabulator-side offline importer/dry-run command or preview route that reads a local BroadLister bundle file and produces a mutation plan. BroadLister should not call Tabulator.
 
-## Proposed Offline Import Adapter Design
+## Implemented BroadLister-Local Dry Run
+
+The BroadLister-local dry run exists to validate downloaded bundles before any Tabulator-side implementation consumes them. It is intentionally non-mutating and in-memory.
+
+Return shape:
+
+```ts
+type BroadListerTabulatorOfflineImportDryRunV1 = {
+  schema: "BroadListerTabulatorOfflineImportDryRun.v1";
+  mode: "validate_dry_run";
+  validation: {
+    ok: boolean;
+    errors: Finding[];
+    warnings: Finding[];
+  };
+  source_bundle: {
+    schema?: string;
+    export_schema_version?: string;
+    export_id?: string;
+    exported_at?: string;
+    bundle_sha256: string;
+  };
+  idempotency: {
+    duplicate_findings: Finding[];
+    keys: Array<{ entity: string; source_id: string; key: string }>;
+  };
+  mapping_preview: {
+    operations: Array<{ op: string; entity: string; idempotency_key: string; source: object; preview: object }>;
+    proposals: Array<{ op: "queue_ontology_proposal"; entity: "OntologyProposal"; idempotency_key: string; source: object; preview: object }>;
+    rejected_records: Array<{ source_id: string; reason: string; path: string }>;
+    omitted_records: object[];
+  };
+  safety: {
+    tabulator_api_called: false;
+    tabulator_runtime_dependency_used: false;
+    external_writes_performed: false;
+    contacts_imported: false;
+    client_private_fields_imported: false;
+  };
+};
+```
+
+The mapping preview is advisory only:
+
+- `Article` -> proposed Tabulator `Link`.
+- `Article` -> proposed `ExternalSourceRecord`.
+- referenced tags -> proposed `Tag`.
+- artifact tag edges -> proposed `LinkTag`.
+- reviewed article artifact -> proposed `ResearchArtifact`.
+- unmapped BroadLister tags -> proposed `OntologyProposal`.
+
+## Future Tabulator-Side Import Adapter Design
 
 Adapter owner: Tabulator repo, not BroadLister.
 
