@@ -107,12 +107,15 @@ async function buildReviewContext(proposal: ReviewProposal): Promise<ReviewConte
   if (proposal.model === "ontologyMapping") matches.push(...await ontologyMappingMatches(data));
 
   const missing = dependencies.some((dependency) => dependency.status === "missing");
+  const requiresManualResolution = proposal.model === "ontologyMapping" && ["conflict", "duplicate_in_snapshot"].includes(String(data.mapping_status ?? ""));
   return {
     proposal,
     summary: summarizeProposal(proposal),
     matches,
     dependencies,
-    recommended_action: missing
+    recommended_action: requiresManualResolution
+      ? "reject_or_defer"
+      : missing
       ? "resolve_dependencies"
       : matches.length > 0
         ? "match_existing"
@@ -214,6 +217,9 @@ async function createClientRelevanceNote(data: Record<string, any>) {
 }
 
 async function applyOntologyMapping(data: Record<string, any>) {
+  if (data.mapping_status === "conflict" || data.mapping_status === "duplicate_in_snapshot") {
+    throw new Error("Ontology mapping has conflicts or duplicate source IDs. Reject or defer for manual resolution.");
+  }
   const existing = (await ontologyMappingMatches(data))[0];
   const tag = existing
     ? await prisma.tag.findUniqueOrThrow({ where: { id: existing.id } })
@@ -226,6 +232,12 @@ async function applyOntologyMapping(data: Record<string, any>) {
       }
     });
   const currentExternalIds = tag.external_ids_json ? JSON.parse(tag.external_ids_json) as Record<string, unknown> : {};
+  for (const [key, value] of Object.entries(data.external_ids_to_add ?? {})) {
+    if (typeof currentExternalIds[key] === "string" && currentExternalIds[key] !== value) {
+      throw new Error(`Ontology mapping conflicts with existing ${key}. Reject or defer for manual resolution.`);
+    }
+  }
+  const approvedAt = new Date().toISOString();
   const nextExternalIds = {
     ...currentExternalIds,
     ontology_core_id: data.ontology_core_id ?? currentExternalIds.ontology_core_id,
@@ -236,6 +248,13 @@ async function applyOntologyMapping(data: Record<string, any>) {
     mapping_version: data.source_version,
     mapping_source_system: data.source_system,
     relationship_to_ontology: data.relationship_to_ontology ?? "exact",
+    source_snapshot_id: data.source_snapshot_id ?? currentExternalIds.source_snapshot_id,
+    source_snapshot_label: data.source_snapshot_label ?? currentExternalIds.source_snapshot_label,
+    source_snapshot_exported_at: data.source_snapshot_exported_at ?? currentExternalIds.source_snapshot_exported_at,
+    import_batch_row_id: data.import_batch_row_id ?? currentExternalIds.import_batch_row_id,
+    review_observed_at: data.observed_at ?? currentExternalIds.review_observed_at,
+    approval_timestamp: approvedAt,
+    mapping_rationale: data.provenance_summary?.rationale ?? data.rationale ?? currentExternalIds.mapping_rationale,
     reviewed_via: "BroadLister review queue"
   };
   return prisma.tag.update({
@@ -288,10 +307,30 @@ async function tagMatches(data: Record<string, any>): Promise<Match[]> {
 }
 
 async function ontologyMappingMatches(data: Record<string, any>): Promise<Match[]> {
-  return tagMatches({
+  const baseMatches = await tagMatches({
     slug: data.suggested_tag_slug ?? data.broadlister_tag_slug ?? data.concept_slug,
     name: data.name
   });
+  const externalIds = data.external_ids_to_add && typeof data.external_ids_to_add === "object" ? data.external_ids_to_add as Record<string, unknown> : {
+    ontology_core_id: data.ontology_core_id,
+    ontology_core_slug: data.ontology_core_slug,
+    tabulator_tag_id: data.tabulator_tag_id,
+    tabulator_normalized_name: data.tabulator_normalized_name
+  };
+  const externalMatches = (await prisma.tag.findMany({ take: 200 }))
+    .filter((tag) => tag.external_ids_json && hasAnyExternalId(tag.external_ids_json, externalIds))
+    .map((tag) => ({ model: "ontologyMapping" as const, id: tag.id, label: tag.name, confidence: "high" as const, reason: "External ID already mapped" }));
+  const byId = new Map([...externalMatches, ...baseMatches].map((match) => [match.id, match]));
+  return Array.from(byId.values());
+}
+
+function hasAnyExternalId(input: string, externalIds: Record<string, unknown>): boolean {
+  try {
+    const current = JSON.parse(input) as Record<string, unknown>;
+    return Object.entries(externalIds).some(([key, value]) => typeof value === "string" && current[key] === value);
+  } catch {
+    return false;
+  }
 }
 
 async function contactMethodMatches(data: Record<string, any>): Promise<Match[]> {

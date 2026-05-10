@@ -2,24 +2,24 @@
 
 ## Recommended Next Phase
 
-Next phase should be either `A1.1) ontology import refinement` or `B) Tabulator reviewed-artifact export planning`, depending on Bo's review of the snapshot workflow.
+Next phase should be `B) Tabulator reviewed-artifact export planning`, unless Bo wants manual conflict-resolution controls before exports.
 
 The browser-validation and hardening pass added Playwright coverage, expanded API hardening tests, documented Tailscale access, and preserved the no-outreach and cross-client safety posture. The import-ingestion pass added deterministic, review-gated URL article ingestion and CSV contact imports. The reconciliation pass added deterministic duplicate matching, linked approval resolution, import batch filtering, defer/reject paths, and review queue context panels. No additional hardening block is currently severe enough to defer ontology planning.
 
 This planning package defines alignment contracts for ontology-core, Tabulator, and Bucketer. It does not hard-couple BroadLister to ProjectReckoner, Tabulator, TaskReckoner, Bucketer, Hermes, or sevenfold at runtime.
 
-Implemented branch: `phase-4-ontology-snapshot-import`.
+Implemented branches: `phase-4-ontology-snapshot-import`, then `phase-4-ontology-review-refinement`.
 
 ## Objective
 
-Bridge A now implements the smallest safe bridge: a local, read-only ontology/tag mapping snapshot intake that creates BroadLister review items and stores accepted mappings locally. No external API calls or package-level runtime dependency.
+Bridge A now implements the smallest safe bridge plus local review refinement: a static ontology/tag mapping snapshot intake that creates BroadLister review items, shows field-level changes/provenance, handles repeated imports safely, and stores accepted mappings locally. No external API calls or package-level runtime dependency.
 
 ## Proposed Workstreams
 
 1. Validate Bridge A with a real operator-curated ontology snapshot.
-2. Decide whether conflict display needs refinement before broader use.
+2. If real use shows many conflicts, add manual conflict-resolution controls before export work.
 3. Add optional fixture examples for Tabulator tag snapshots if Bo wants Tabulator mapping coverage before exports.
-4. If Bridge A feels sufficient, move to Tabulator reviewed-artifact export planning.
+4. Move to Tabulator reviewed-artifact export planning once Bo accepts the current local mapping review.
 5. Keep Bucketer imports and monitoring hints deferred until Tabulator artifact shape is proven.
 
 ## Likely Architecture
@@ -78,7 +78,8 @@ Bridge A implementation now includes:
 - `docs/fixtures/ontology-snapshot.v1.example.json`.
 - API preview/commit route for local mapping snapshots, creating review items only.
 - Review context for mapping candidates.
+- Field-level mapping review, provenance visibility, repeat-import safety, and conflict states.
 - Approved mapping storage in `Tag.external_ids_json`.
-- Tests for parse, preview, review item creation, approval mutation, reject/defer non-mutation, malformed snapshots, no network calls, and cross-client leakage.
+- Tests for parse, field-level preview, review item creation, repeated import safety, duplicate source IDs, external ID conflicts, normalized matching, approval mutation, reject/defer non-mutation, malformed snapshots, no network calls, and cross-client leakage.
 
-Recommended next after Bo review: Tabulator export planning if Bridge A feels adequate; otherwise do one refinement pass on ontology import conflict UX and fixture coverage.
+Recommended next after Bo review: Tabulator export planning is now reasonable. One more local refinement pass is only needed if Bo wants explicit manual merge/update controls for conflict rows before any export planning.

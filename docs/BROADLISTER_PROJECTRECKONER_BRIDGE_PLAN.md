@@ -93,15 +93,24 @@ Implemented Bridge A shape:
 
 The API accepts JSON text from a browser upload/paste. It does not read ProjectReckoner files, import ontology-core packages, call external APIs, or write to external systems.
 
+Bridge A refinement adds field-level review and safer repeat use:
+
+- Preview classifies rows as `create_new`, `match_existing`, `already_mapped`, `conflict`, or `duplicate_in_snapshot`.
+- Review detail shows source concept ID, source kind, suggested BroadLister tag kind, match confidence, match reason, fields touched, external IDs added, and snapshot provenance.
+- Repeated imports reuse an existing pending ontology mapping review item for the same source system/version/record ID.
+- Approval is idempotent for already mapped rows where practical.
+- Approval is blocked for conflict and duplicate-source-ID rows; operator should reject or defer those.
+
 ## Recommended Bridge Sequence
 
 Current recommendation after inspecting BroadLister, ontology-core, Tabulator, and Bucketer:
 
 1. Complete contract docs only in this phase.
 2. Current implementation: read-only ontology/tag mapping snapshot import into BroadLister review queue.
-3. Then export reviewed BroadLister media artifacts to Tabulator-compatible files.
-4. Then Bucketer-to-BroadLister signal candidate import.
-5. Last: BroadLister-to-Bucketer monitoring hints.
+3. Current refinement: field-level review, provenance visibility, repeat-import safety, and conflict detection.
+4. Then export reviewed BroadLister media artifacts to Tabulator-compatible files.
+5. Then Bucketer-to-BroadLister signal candidate import.
+6. Last: BroadLister-to-Bucketer monitoring hints.
 
 Rationale:
 
@@ -147,7 +156,7 @@ Primary interface shapes:
 ### Phase B: Advisory mapping
 
 - Exercise Bridge A on real exported mapping snapshots.
-- Add operator refinements only if needed, such as clearer mapping conflict display.
+- Add operator refinements only if needed, such as manual conflict resolution controls.
 - Keep external IDs in JSON fields unless Bo approves a migration.
 
 ### Phase C: Operator-triggered bridge

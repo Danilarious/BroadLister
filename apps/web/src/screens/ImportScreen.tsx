@@ -15,6 +15,7 @@ type ImportStatus = {
 const starterCsv = "name,outlet,role,email,beat,location,profile url,notes\nJane Reporter,Example Daily,Reporter,jane@example.com,stablecoins,Brazil,https://example.com/jane,Trace-relevant source\n";
 const starterOntologySnapshot = JSON.stringify({
   schema: "BroadListerOntologySnapshot.v1",
+  snapshot_id: "fixture-public-ontology-2026-05",
   source_system: "ontology-core",
   source_version: "fixture-2026-05",
   exported_at: "2026-05-10T00:00:00.000Z",
@@ -238,10 +239,32 @@ export function ImportScreen({ onImported, onOpenReview }: Props) {
             <div className="preview-list">
               {ontologyPreview.rows.slice(0, 8).map((row) => (
                 <div className="field-row" key={row.source_record_id}>
-                  <strong>{row.name} <span className="badge">{row.kind}</span></strong>
-                  <span>{row.external_id ?? row.concept_slug}</span>
-                  <span>BroadLister: {row.suggested_match ? `${row.suggested_match.name} (${row.suggested_match.slug})` : row.suggested_tag_slug}</span>
-                  <small className="muted">{row.confidence}: {row.reason}</small>
+                  <strong>{row.name} <span className="badge">{row.mapping_status.replaceAll("_", " ")}</span></strong>
+                  <span>Source: {row.source_system} · {row.source_concept_id ?? row.source_record_id} · {row.source_kind}</span>
+                  <span>BroadLister: {row.suggested_match ? `${row.suggested_match.name} (${row.suggested_match.slug})` : `create ${row.suggested_tag_slug}`}</span>
+                  <span>Confidence: {row.confidence}. {row.reason}</span>
+                  {row.conflict_reasons.length > 0 && <small className="error-inline">{row.conflict_reasons.join("; ")}</small>}
+                  <details>
+                    <summary>Fields and provenance</summary>
+                    <dl className="entity-summary">
+                      {row.field_changes.map((change) => (
+                        <div key={change.field}>
+                          <dt>{change.field}</dt>
+                          <dd>{change.action}: {formatChange(change.proposed)}</dd>
+                        </div>
+                      ))}
+                      <div>
+                        <dt>Observed</dt>
+                        <dd>{row.provenance_summary.observed_at}</dd>
+                      </div>
+                      {row.provenance_summary.rationale && (
+                        <div>
+                          <dt>Rationale</dt>
+                          <dd>{row.provenance_summary.rationale}</dd>
+                        </div>
+                      )}
+                    </dl>
+                  </details>
                 </div>
               ))}
             </div>
@@ -265,4 +288,10 @@ function readableError(error: unknown): string {
     }
   }
   return "Import failed.";
+}
+
+function formatChange(value: unknown): string {
+  if (value === undefined || value === null) return "empty";
+  if (typeof value === "string") return value;
+  return JSON.stringify(value);
 }

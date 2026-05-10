@@ -1312,6 +1312,57 @@ Started branch `phase-4-ontology-snapshot-import` from `phase-4-ontology-alignme
 
 ---
 
+## 2026-05-09T21:19:40-07:00 — Ontology Review Refinement Final Verification
+
+### Action
+
+Completed full verification and backup for ontology review refinement.
+
+### Files Changed
+
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `pnpm verify`: exit 0
+- `pnpm check:global-models && pnpm check:denylist && pnpm build`: exit 0
+- `pnpm test:e2e`: exit 0
+- `pnpm test:mobile`: exit 0
+- `pnpm verify:full`: exit 0
+- `pnpm backup:db`: exit 0
+
+### Tests Run
+
+- API tests: 9 files, 42 tests passed.
+- Web unit tests: 1 file, 3 tests passed.
+- Playwright E2E: 8 tests passed.
+- Mobile Playwright: 4 tests passed.
+- Global-model guard: pass.
+- Dependency deny-list guard: pass.
+- Cross-client leakage integration test: pass.
+
+### Backup
+
+- `/home/bxby/development/BroadLister/data/backups/broadlister-2026-05-10T04-19-40-279Z.sqlite`
+
+### Hermes / Sevenfold
+
+- No new review gate triggered.
+
+### Blockers / Stopping Conditions
+
+- None.
+
+### Rollback Notes
+
+- Revert the forthcoming commit and restore the backup above if local test data needs rollback.
+
+### Next Recommended Action
+
+- Commit and tag `phase-4-ontology-review-refinement-complete`.
+
+---
+
 ## 2026-05-09T21:05:15-07:00 — Bridge A Final Verification
 
 ### Action
@@ -1362,3 +1413,56 @@ Completed full Bridge A verification and backup. Fixed one E2E selector ambiguit
 ### Next Recommended Action
 
 - Commit and tag `phase-4-ontology-snapshot-import-complete`.
+
+---
+
+## 2026-05-09T21:17:57-07:00 — Ontology Review Refinement
+
+### Action
+
+Started branch `phase-4-ontology-review-refinement` from `phase-4-ontology-snapshot-import-complete`. Refined local ontology snapshot import/review only. Added field-level preview payloads, mapping statuses, conflict reasons, external IDs to add, snapshot provenance, repeated-import pending review reuse, and approval blocking for conflict/duplicate source ID rows.
+
+### Files Changed
+
+- `apps/api/src/routes/imports.ts`
+- `apps/api/src/services/ontology-snapshot.ts`
+- `apps/api/src/services/review.ts`
+- `apps/api/test/ontology-snapshot.test.ts`
+- `apps/web/src/components/ReviewQueue.tsx`
+- `apps/web/src/screens/ImportScreen.tsx`
+- `apps/web/src/types.ts`
+- `docs/BROADLISTER_NEXT_DEVELOPMENT_PLAN.md`
+- `docs/BROADLISTER_ONTOLOGY_ALIGNMENT_PLAN.md`
+- `docs/BROADLISTER_OPERATOR_RUNBOOK.md`
+- `docs/BROADLISTER_PROJECTRECKONER_BRIDGE_PLAN.md`
+- `docs/fixtures/ontology-snapshot.v1.example.json`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `git checkout -b phase-4-ontology-review-refinement`: exit 0
+- `pnpm --filter @broadlister/api typecheck && pnpm --filter @broadlister/api test -- ontology-snapshot.test.ts`: exit 1; conflict detection was too broad
+- `pnpm --filter @broadlister/api test -- ontology-snapshot.test.ts`: exit 0 after narrowing conflict detection
+
+### Tests Run
+
+- API targeted suite: 9 files, 42 tests passed.
+- New/expanded ontology tests cover field-level preview payload, repeated import reuse, duplicate source IDs, external ID conflict blocking, normalized label/kind matching, same-label different-kind handling, idempotent already-mapped approval, malformed partial concepts, no network calls, and reject/defer non-mutation.
+- Cross-client leakage integration test: pass in targeted API suite.
+
+### Hermes / Sevenfold
+
+- No new review gate triggered. This is a local BroadLister refinement with no runtime dependency, external write, outreach behavior, schema migration, or export-shape change.
+
+### Blockers / Stopping Conditions
+
+- None.
+
+### Rollback Notes
+
+- Revert the forthcoming branch commit. No schema migration was added.
+- Approval continues to touch only local `Tag.external_ids_json`; restore from latest DB backup if local test data cleanup is required.
+
+### Next Recommended Action
+
+- Run full verification stack, backup DB, commit, tag, push, then stop for Bo review.

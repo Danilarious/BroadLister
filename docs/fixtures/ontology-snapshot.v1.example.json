@@ -1,5 +1,6 @@
 {
   "schema": "BroadListerOntologySnapshot.v1",
+  "snapshot_id": "fixture-public-ontology-2026-05",
   "source_system": "ontology-core",
   "source_version": "fixture-2026-05",
   "exported_at": "2026-05-10T00:00:00.000Z",

@@ -75,7 +75,7 @@ export async function registerImportRoutes(app: FastifyInstance): Promise<void> 
   app.post("/imports/ontology/preview", async (request, reply) => {
     const body = ontologySnapshotBody.parse(request.body);
     try {
-      return await previewOntologySnapshot(body.snapshot_json);
+      return await previewOntologySnapshot(body.snapshot_json, body.label);
     } catch (error) {
       return reply.code(400).send({ error: "malformed_ontology_snapshot", message: (error as Error).message });
     }

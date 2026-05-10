@@ -2,7 +2,7 @@
 
 ## Status
 
-Planning-only. No runtime integration is implemented in this phase.
+Bridge A is implemented as a local/static snapshot import. No runtime integration with external systems is implemented.
 
 ## Objective
 
@@ -88,6 +88,7 @@ Snapshot format:
 ```ts
 interface BroadListerOntologySnapshot {
   schema: "BroadListerOntologySnapshot.v1";
+  snapshot_id?: string;
   source_system: "ontology-core" | "tabulator" | "operator-curated";
   source_version: string;
   exported_at?: string;
@@ -115,7 +116,15 @@ Committed fixture:
 
 - `docs/fixtures/ontology-snapshot.v1.example.json`
 
-Preview output shows source system, source version, concept name/kind, external ID, suggested BroadLister tag slug, deterministic match if one exists, confidence, and reason.
+Preview output shows source system, source version, concept name/kind, external ID, suggested BroadLister tag slug, deterministic match if one exists, confidence, reason, mapping status, field-level changes, external IDs to add, conflict reasons, and snapshot provenance.
+
+Preview mapping statuses:
+
+- `create_new`: approval can create a new local `Tag` and store external references.
+- `match_existing`: approval can update a deterministic local `Tag` match.
+- `already_mapped`: external ID is already present locally; approval is idempotent where practical.
+- `conflict`: incoming kind or external ID conflicts with an existing local tag; reject or defer for manual resolution.
+- `duplicate_in_snapshot`: the same source ID appears more than once in one snapshot; reject or defer duplicates.
 
 Future implementations may promote this to a local table if operator use proves a need. JSON is safer first because it avoids migration pressure and keeps the bridge reversible.
 
@@ -174,9 +183,24 @@ Approved external metadata uses this local JSON shape inside `Tag.external_ids_j
   "mapping_version": "fixture-2026-05",
   "mapping_source_system": "ontology-core",
   "relationship_to_ontology": "exact",
+  "source_snapshot_id": "fixture-public-ontology-2026-05",
+  "source_snapshot_label": "ontology-snapshot.v1.example.json",
+  "source_snapshot_exported_at": "2026-05-10T00:00:00.000Z",
+  "import_batch_row_id": "uuid",
+  "review_observed_at": "2026-05-10T04:00:00.000Z",
+  "approval_timestamp": "2026-05-10T04:05:00.000Z",
+  "mapping_rationale": "Public media beat taxonomy fixture",
   "reviewed_via": "BroadLister review queue"
 }
 ```
+
+## Repeat Import And Conflict Behavior
+
+Repeated imports of the same snapshot/source version do not create uncontrolled pending review duplicates. If a matching pending ontology review item already exists for the same `source_system`, `source_version`, and `source_record_id`, the import response reuses that review item.
+
+Preview detects existing mappings by `Tag.external_ids_json`, by slug, and by normalized name plus kind. Approval is blocked for explicit `conflict` and `duplicate_in_snapshot` statuses. Reject/defer mutates no `Tag`.
+
+Conflict handling remains intentionally conservative. BroadLister does not auto-merge two local tags, does not rewrite an existing external ID to a different value, and does not promote client/campaign overlay labels into global ontology mappings.
 
 ## Guardrails For Client Relevance
 

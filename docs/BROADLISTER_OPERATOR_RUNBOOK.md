@@ -98,7 +98,7 @@ Workflow:
 2. Use `Static ontology snapshot`.
 3. Upload a `.json` file or paste JSON text.
 4. Click `Preview ontology`.
-5. Inspect source system, source version, concept kind, external ID, suggested BroadLister tag match, confidence, and reason.
+5. Inspect source system, source version, concept kind, external ID, suggested BroadLister tag match, confidence, reason, mapping status, field changes, external IDs, and provenance.
 6. Click `Create mapping review items`.
 7. Open Review Queue filtered to the import batch.
 8. Approve only mappings that should update local tag external references.
@@ -120,9 +120,23 @@ Approval behavior:
 
 - Creates or matches a local `Tag` by slug/name.
 - Updates only `Tag.external_ids_json`.
+- Stores snapshot/source metadata, import batch row id, approval timestamp, and mapping rationale in `Tag.external_ids_json`.
 - Does not write external systems.
 - Does not create client tags, campaign narrative fields, outreach status, or client notes.
 - Reject/defer mutates no tags.
+
+Mapping statuses:
+
+- `create_new`: approval creates a local global tag and stores external references.
+- `match_existing`: approval updates the matched local tag's external references.
+- `already_mapped`: preview found the external ID on an existing tag; approval should be idempotent.
+- `conflict`: existing local mapping differs from the incoming external ID or kind; reject or defer.
+- `duplicate_in_snapshot`: same source ID appears twice in one snapshot; reject or defer duplicates.
+
+Repeated import behavior:
+
+- Re-importing the same `source_system` + `source_version` + `source_record_id` reuses an existing pending ontology review item instead of creating uncontrolled duplicates.
+- Preview still shows already mapped concepts so the operator can see why no new tag mutation is needed.
 
 ## Access From Mac
 

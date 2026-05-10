@@ -72,12 +72,18 @@ export type UrlIngestResult = {
 export type OntologyPreviewRow = {
   source_system: string;
   source_version: string;
+  source_snapshot_id?: string;
+  source_snapshot_label?: string;
   source_record_id: string;
+  source_concept_id?: string;
   name: string;
   kind: string;
+  source_kind: string;
+  suggested_tag_kind: string;
   external_id?: string;
   concept_slug: string;
   suggested_tag_slug: string;
+  mapping_status: "already_mapped" | "match_existing" | "create_new" | "conflict" | "duplicate_in_snapshot";
   suggested_match?: {
     id: string;
     slug: string;
@@ -86,6 +92,23 @@ export type OntologyPreviewRow = {
   };
   confidence: "low" | "medium" | "high";
   reason: string;
+  conflict_reasons: string[];
+  field_changes: Array<{
+    field: string;
+    current?: unknown;
+    proposed: unknown;
+    action: "create" | "update" | "unchanged" | "add_external_id" | "conflict";
+  }>;
+  external_ids_to_add: Record<string, string>;
+  provenance_summary: {
+    source_system: string;
+    source_version: string;
+    source_snapshot_id?: string;
+    source_snapshot_label?: string;
+    exported_at?: string;
+    observed_at: string;
+    rationale?: string;
+  };
 };
 
 export type OntologySnapshotPreview = {

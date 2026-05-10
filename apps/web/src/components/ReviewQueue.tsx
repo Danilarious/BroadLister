@@ -90,7 +90,7 @@ export function ReviewQueue({ reviews, selected, selectedBatchId, kindFilter, is
                 <p>{actionCopy(context?.recommended_action)}</p>
               </div>
 
-              {data && <EntitySummary data={data} />}
+              {data && selected.kind === "ontology_mapping_candidate" ? <OntologyMappingSummary data={data} /> : data && <EntitySummary data={data} />}
 
               <section className="reconciliation-panel">
                 <h4>Likely matches</h4>
@@ -177,4 +177,67 @@ function EntitySummary({ data }: { data: Record<string, unknown> }) {
       ))}
     </dl>
   );
+}
+
+function OntologyMappingSummary({ data }: { data: Record<string, unknown> }) {
+  const fieldChanges = Array.isArray(data.field_changes) ? data.field_changes as Array<Record<string, unknown>> : [];
+  const externalIds = data.external_ids_to_add && typeof data.external_ids_to_add === "object" ? data.external_ids_to_add as Record<string, unknown> : {};
+  const provenance = data.provenance_summary && typeof data.provenance_summary === "object" ? data.provenance_summary as Record<string, unknown> : {};
+
+  return (
+    <div className="ontology-review-detail">
+      <dl className="entity-summary">
+        <div><dt>Status</dt><dd>{String(data.mapping_status ?? "unknown").replaceAll("_", " ")}</dd></div>
+        <div><dt>Source</dt><dd>{String(data.source_system ?? "unknown")} · {String(data.source_concept_id ?? data.source_record_id ?? "unknown")}</dd></div>
+        <div><dt>Source label</dt><dd>{String(data.name ?? "unnamed")}</dd></div>
+        <div><dt>Source kind</dt><dd>{String(data.source_kind ?? data.kind ?? "unknown")}</dd></div>
+        <div><dt>Suggested tag kind</dt><dd>{String(data.suggested_tag_kind ?? data.kind ?? "unknown")}</dd></div>
+        <div><dt>Suggested match</dt><dd>{suggestedMatchLabel(data)}</dd></div>
+        <div><dt>Confidence</dt><dd>{String(data.confidence ?? "unknown")} · {String(data.reason ?? "")}</dd></div>
+        <div><dt>Snapshot</dt><dd>{String(data.source_snapshot_label ?? data.source_snapshot_id ?? "not provided")}</dd></div>
+        <div><dt>Observed</dt><dd>{String(provenance.observed_at ?? data.observed_at ?? "unknown")}</dd></div>
+      </dl>
+
+      {Array.isArray(data.conflict_reasons) && data.conflict_reasons.length > 0 && (
+        <div className="notice error compact" role="alert">
+          {(data.conflict_reasons as string[]).join("; ")}
+        </div>
+      )}
+
+      <section className="reconciliation-panel">
+        <h4>Fields approval will touch</h4>
+        {fieldChanges.length === 0 && <p className="muted">No field-level changes reported.</p>}
+        {fieldChanges.map((change) => (
+          <div className="match-row" key={String(change.field)}>
+            <strong>{String(change.field)}</strong>
+            <span>{String(change.action)} → {formatReviewValue(change.proposed)}</span>
+            {change.current !== undefined && <small>Current: {formatReviewValue(change.current)}</small>}
+          </div>
+        ))}
+      </section>
+
+      <section className="reconciliation-panel">
+        <h4>External IDs to add</h4>
+        {Object.keys(externalIds).length === 0 && <p className="muted">No external IDs in this proposal.</p>}
+        {Object.entries(externalIds).map(([key, value]) => (
+          <div className="match-row" key={key}>
+            <strong>{key}</strong>
+            <span>{formatReviewValue(value)}</span>
+          </div>
+        ))}
+      </section>
+    </div>
+  );
+}
+
+function suggestedMatchLabel(data: Record<string, unknown>): string {
+  const match = data.suggested_match && typeof data.suggested_match === "object" ? data.suggested_match as Record<string, unknown> : undefined;
+  if (!match) return `Create ${String(data.suggested_tag_slug ?? "new tag")}`;
+  return `${String(match.name ?? "tag")} (${String(match.slug ?? match.id ?? "unknown")})`;
+}
+
+function formatReviewValue(value: unknown): string {
+  if (value === undefined || value === null) return "empty";
+  if (typeof value === "string") return value;
+  return JSON.stringify(value);
 }
