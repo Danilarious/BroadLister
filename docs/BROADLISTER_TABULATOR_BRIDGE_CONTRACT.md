@@ -2,7 +2,7 @@
 
 ## Status
 
-Service-only preview scaffold. No export adapter, route, UI, download, file writer, or Tabulator runtime integration is implemented in this phase.
+Read-only API preview scaffold. No export adapter, UI, download, file writer, or Tabulator runtime integration is implemented in this phase.
 
 This contract defines the next safe bridge after local ontology snapshot import refinement: reviewed BroadLister media artifacts exported to a local JSON file that Tabulator may later import. BroadLister must not POST to Tabulator, import Tabulator runtime code, or require Tabulator to run.
 
@@ -12,7 +12,9 @@ Current implementation scaffold:
 - `apps/api/test/tabulator-export-contract.test.ts` locks the forbidden-field, reviewed-only, provenance-required, deterministic-shape, idempotency, no-network, and no-external-write expectations.
 - `apps/api/src/services/tabulator-export-preview.ts` contains a DB-backed service-only preview that reads approved/provenance-backed public records, feeds allowlisted data into the contract helper, and returns an in-memory preview bundle plus omission metadata.
 - `apps/api/test/tabulator-export-preview.test.ts` locks the preview behavior.
-- No API route, UI, JSON download, file writer, or Tabulator integration exists yet.
+- `GET /tabulator/export/preview` exposes that in-memory preview through a read-only local API route.
+- `apps/api/test/tabulator-export-preview-route.test.ts` locks the route behavior.
+- No UI, JSON download, file writer, or Tabulator integration exists yet.
 
 ## Intent
 
@@ -79,8 +81,8 @@ If a future client-scoped export is approved, it must use a separate `BroadListe
 
 ## First Future Implementation Path
 
-1. Current slice: DB-backed service-only preview that builds an in-memory `BroadListerReviewedMediaExportBundle`.
-2. Next slice: add a BroadLister export preview route that exposes the in-memory preview without writing files.
+1. Current slice: read-only API route exposes a DB-backed in-memory `BroadListerReviewedMediaExportBundle` preview.
+2. Next slice: add an operator UI preview surface without writing files.
 3. Preview shows counts, included record IDs, provenance coverage, omitted rows/reasons, and excluded overlay categories.
 4. Later slice: operator confirms a local JSON download/export.
 5. BroadLister writes only an operator-confirmed local file or returns a download response.

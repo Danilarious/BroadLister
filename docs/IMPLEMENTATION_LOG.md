@@ -1513,6 +1513,55 @@ Started branch `phase-4-tabulator-export-preview` from `phase-4-tabulator-export
 
 ---
 
+## 2026-05-10T10:30:24-07:00 — Tabulator Export Preview Route
+
+### Action
+
+Started branch `phase-4-tabulator-export-preview-route` from `phase-4-tabulator-export-preview-complete`. Added read-only `GET /tabulator/export/preview`, wired to the existing DB-backed preview service. The route returns the in-memory bundle and omission metadata, accepts deterministic preview query parameters, and supports optional comma-separated `article_ids` scoping. No UI, JSON download, file writer, Tabulator API call, network behavior beyond the local API request, contact-method export, schema change, external write, or runtime dependency was added.
+
+### Files Changed
+
+- `apps/api/src/app.ts`
+- `apps/api/src/routes/tabulator-export.ts`
+- `apps/api/test/tabulator-export-preview-route.test.ts`
+- `docs/BROADLISTER_TABULATOR_BRIDGE_CONTRACT.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `git checkout -b phase-4-tabulator-export-preview-route`: exit 0
+- `pnpm --filter @broadlister/api typecheck && pnpm --filter @broadlister/api test -- tabulator-export-preview-route.test.ts`: exit 0
+- `git diff --check && pnpm verify`: exit 0
+- `pnpm check:global-models && pnpm check:denylist && pnpm build && pnpm --filter @broadlister/api test -- tabulator-export-preview.test.ts && pnpm --filter @broadlister/api test -- tabulator-export-preview-route.test.ts && pnpm --filter @broadlister/api test -- cross-client-leakage.test.ts`: exit 0
+
+### Tests Run
+
+- API targeted suite: 12 files, 60 tests passed.
+- Full `pnpm verify`: API 12 files / 60 tests passed; web 1 file / 3 tests passed; typecheck and lint passed.
+- Global-model guard: pass.
+- Dependency deny-list guard: pass.
+- Build: pass.
+- New route tests cover preview bundle response, omission metadata for unapproved and missing-provenance articles, client-private field exclusion, contact-method exclusion, selected article-id scoping, no network calls, no file writer imports, no Tabulator runtime dependency, and generic cross-client isolation.
+- Cross-client leakage integration test: pass in targeted API suite.
+
+### Hermes / Sevenfold
+
+- No review gate triggered. This is a read-only local API preview route and does not add a Tabulator integration, export file shape, UI workflow, Sevenfold client-folder export behavior, or outreach behavior.
+
+### Blockers / Stopping Conditions
+
+- None.
+
+### Rollback Notes
+
+- Revert the forthcoming branch commit. No database schema, file output, dependency, external integration, or UI behavior changed.
+
+### Next Recommended Action
+
+- Commit, tag `phase-4-tabulator-export-preview-route-complete`, push branch/tag, then report that UI/download/Tabulator integration remain deferred.
+
+---
+
 ## 2026-05-09T21:05:15-07:00 — Bridge A Final Verification
 
 ### Action
