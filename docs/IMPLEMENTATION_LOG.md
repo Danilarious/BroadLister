@@ -1363,6 +1363,53 @@ Completed full verification and backup for ontology review refinement.
 
 ---
 
+## 2026-05-09T21:40:08-07:00 — Tabulator Export Planning
+
+### Action
+
+Started branch `phase-4-tabulator-export-planning` from `phase-4-ontology-review-refinement-complete`. Completed docs-only planning for future BroadLister reviewed-media local JSON export to Tabulator. No export implementation, network calls, external writes, schema changes, or runtime coupling added.
+
+### Files Changed
+
+- `docs/BROADLISTER_TABULATOR_BRIDGE_CONTRACT.md`
+- `docs/BROADLISTER_PROJECTRECKONER_BRIDGE_PLAN.md`
+- `docs/BROADLISTER_NEXT_DEVELOPMENT_PLAN.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `git checkout -b phase-4-tabulator-export-planning`: exit 0
+- Read-only Tabulator inspection: `sed` over Tabulator docs and Prisma schema, exit 0
+- Hermes architecture review via `/home/bxby/.local/bin/hermes -z ...`: exit 0
+
+### Tests Run
+
+- Docs-only phase. No application tests required before docs commit.
+- No code, package, schema, DB, or runtime behavior changed.
+
+### Hermes / Reckoner-Dev / Sevenfold
+
+- Hermes General/default returned `PASS WITH CONDITIONS`.
+- Hermes confirmed file-first BroadLister export fits Tabulator architecture better than direct POST.
+- Hermes guidance: BroadLister should export a neutral local source bundle; future Tabulator importer owns mapping into `Link`, `ExternalSourceRecord`, `Tag`, `LinkTag`, and optional `ResearchArtifact`.
+- Conditions: allowlist serialization only; explicit forbidden-field tests; provenance required; stable idempotency keys; preview-first behavior; no network calls; no external writes; no Tabulator runtime dependency.
+- Hermes said sevenfold review is not required for this architecture-only planning pass if the contract remains reviewed public media plus provenance/redaction. Sevenfold review should happen before implementation/export-shape approval if client workflow, client-folder conventions, approvals, or scoped client exports are affected.
+
+### Blockers / Stopping Conditions
+
+- None. Planning remains local docs-only.
+
+### Rollback Notes
+
+- Revert the forthcoming docs commit to remove this planning package.
+- No database backup required because no data mutation occurred.
+
+### Next Recommended Action
+
+- Commit and tag `phase-4-tabulator-export-planning-complete`.
+
+---
+
 ## 2026-05-09T21:05:15-07:00 — Bridge A Final Verification
 
 ### Action

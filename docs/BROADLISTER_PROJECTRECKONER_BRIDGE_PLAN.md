@@ -58,11 +58,18 @@ BroadLister should mirror Tabulator's external import contract where useful, but
 
 ## BroadLister To Tabulator
 
-Future flow:
+Planned future flow:
 
-1. BroadLister reviewed article/outlet/journalist records can export link/provenance artifacts.
-2. Tabulator can store those artifacts as knowledge or link metadata.
-3. Tag mappings stay advisory unless Bo approves write-back.
+1. BroadLister builds an operator-previewed local JSON bundle of reviewed media artifacts.
+2. Bundle contains article links, outlet references, byline references, tag mappings, and provenance packets.
+3. Operator inspects and saves/downloads the file.
+4. A later Tabulator-side importer may create `Link`, `ExternalSourceRecord`, `Tag`, `LinkTag`, and optional `ResearchArtifact` rows from the file.
+5. BroadLister does not POST to Tabulator in the first implementation.
+6. Tag mappings stay advisory unless Bo approves write-back.
+
+Eligible BroadLister records are reviewed global media facts only: articles, outlets, bylines, journalist public identity references needed for bylines, global tags/topics/beats, citations, provenance links, and import/source metadata.
+
+Forbidden by default: client-private notes, pitch angles, campaign strategy, narrative fit, relationship warmth, exclusions, embargo notes, outreach status, contact methods, and private client relevance reasoning.
 
 ## ontology-core Mapping
 
@@ -108,7 +115,7 @@ Current recommendation after inspecting BroadLister, ontology-core, Tabulator, a
 1. Complete contract docs only in this phase.
 2. Current implementation: read-only ontology/tag mapping snapshot import into BroadLister review queue.
 3. Current refinement: field-level review, provenance visibility, repeat-import safety, and conflict detection.
-4. Then export reviewed BroadLister media artifacts to Tabulator-compatible files.
+4. Current planning package: define reviewed-media-artifact export contracts for Tabulator-compatible local JSON files.
 5. Then Bucketer-to-BroadLister signal candidate import.
 6. Last: BroadLister-to-Bucketer monitoring hints.
 
@@ -132,7 +139,13 @@ Primary interface shapes:
 - `BroadListerOntologyMapping`
 - `BroadListerTabulatorLinkCandidate`
 - `BroadListerBucketerSignalCandidate`
+- `BroadListerReviewedMediaExportBundle`
 - `BroadListerReviewedMediaArtifact`
+- `BroadListerReviewedArticleLink`
+- `BroadListerReviewedOutletReference`
+- `BroadListerReviewedBylineReference`
+- `BroadListerTagMapping`
+- `BroadListerProvenancePacket`
 - `BroadListerClientRelevanceArtifact`
 - `BroadListerBucketerMonitoringHint`
 
@@ -161,8 +174,9 @@ Primary interface shapes:
 
 ### Phase C: Operator-triggered bridge
 
-- Import Tabulator/Bucketer export files or API snapshots by explicit operator action.
-- Export BroadLister reviewed artifacts for Tabulator/Bucketer consumption.
+- Implement BroadLister reviewed media export preview and local JSON file/download.
+- Keep Tabulator import as a later Tabulator-owned adapter.
+- Import Tabulator/Bucketer export files or API snapshots by explicit operator action only after export shape is proven.
 - Keep all writes deterministic and reviewable.
 
 ## Acceptance Criteria
@@ -172,6 +186,7 @@ Primary interface shapes:
 - No automatic global tag or ontology mutation.
 - All imported records are review-gated.
 - Provenance and source system are visible.
+- Tabulator export tests prove no client overlay leakage and provenance coverage.
 - sevenfold domain review passes for client workflow.
 - Bo approves any implementation beyond local deterministic ingestion.
 

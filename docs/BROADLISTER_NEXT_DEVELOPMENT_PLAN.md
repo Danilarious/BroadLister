@@ -2,25 +2,25 @@
 
 ## Recommended Next Phase
 
-Next phase should be `B) Tabulator reviewed-artifact export planning`, unless Bo wants manual conflict-resolution controls before exports.
+Next implementation phase should be `B1) Tabulator reviewed-media local JSON export`, after Bo reviews and approves the planning contract.
 
 The browser-validation and hardening pass added Playwright coverage, expanded API hardening tests, documented Tailscale access, and preserved the no-outreach and cross-client safety posture. The import-ingestion pass added deterministic, review-gated URL article ingestion and CSV contact imports. The reconciliation pass added deterministic duplicate matching, linked approval resolution, import batch filtering, defer/reject paths, and review queue context panels. No additional hardening block is currently severe enough to defer ontology planning.
 
 This planning package defines alignment contracts for ontology-core, Tabulator, and Bucketer. It does not hard-couple BroadLister to ProjectReckoner, Tabulator, TaskReckoner, Bucketer, Hermes, or sevenfold at runtime.
 
-Implemented branches: `phase-4-ontology-snapshot-import`, then `phase-4-ontology-review-refinement`.
+Implemented branches: `phase-4-ontology-snapshot-import`, `phase-4-ontology-review-refinement`. Current planning branch: `phase-4-tabulator-export-planning`.
 
 ## Objective
 
-Bridge A now implements the smallest safe bridge plus local review refinement: a static ontology/tag mapping snapshot intake that creates BroadLister review items, shows field-level changes/provenance, handles repeated imports safely, and stores accepted mappings locally. No external API calls or package-level runtime dependency.
+Bridge A now implements the smallest safe bridge plus local review refinement: a static ontology/tag mapping snapshot intake that creates BroadLister review items, shows field-level changes/provenance, handles repeated imports safely, and stores accepted mappings locally. The next bridge should remain file-first: reviewed media artifacts exported as local JSON for a future Tabulator-side importer.
 
 ## Proposed Workstreams
 
-1. Validate Bridge A with a real operator-curated ontology snapshot.
-2. If real use shows many conflicts, add manual conflict-resolution controls before export work.
-3. Add optional fixture examples for Tabulator tag snapshots if Bo wants Tabulator mapping coverage before exports.
-4. Move to Tabulator reviewed-artifact export planning once Bo accepts the current local mapping review.
-5. Keep Bucketer imports and monitoring hints deferred until Tabulator artifact shape is proven.
+1. Implement Tabulator export preview for reviewed public media artifacts only.
+2. Add local JSON export/download with deterministic ordering and stable export keys.
+3. Require provenance coverage and omit records without supporting citations.
+4. Add leak tests proving client/campaign overlay fields never appear in generic Tabulator exports.
+5. Keep Tabulator API writes, Tabulator-side importer, Bucketer imports, and monitoring hints deferred.
 
 ## Likely Architecture
 
@@ -28,6 +28,7 @@ Bridge A now implements the smallest safe bridge plus local review refinement: a
 - Ontology mapping starts as advisory metadata from versioned local snapshots.
 - ProjectReckoner ontology identifiers are referenced as external IDs, not joined through runtime service calls.
 - Tabulator alignment follows file/snapshot artifact contracts before API writes.
+- BroadLister produces export files; Tabulator owns any later importer.
 - Bucketer alignment starts after ontology mapping, through signal candidate snapshots.
 
 ## Explicit Deferrals
@@ -42,6 +43,9 @@ Bridge A now implements the smallest safe bridge plus local review refinement: a
 - No Gmail, email sending, or outreach automation.
 - No shared cloud database.
 - No multi-user sync.
+- No direct Tabulator API writes.
+- No Tabulator runtime packages in BroadLister.
+- No client/campaign overlay export into generic Tabulator links/tags.
 
 ## Risks
 
@@ -50,6 +54,8 @@ Bridge A now implements the smallest safe bridge plus local review refinement: a
 - Tag drift if BroadLister and Tabulator evolve without explicit mapping versions.
 - Operator confusion if advisory matches appear as verified facts.
 - Export incompatibility if client-folder conventions change without sevenfold review.
+- Provenance gaps if older article/tag records lack citations.
+- Idempotency drift if export keys include timestamps instead of stable BroadLister IDs and URL hashes.
 
 ## Acceptance Criteria
 
@@ -62,6 +68,8 @@ Bridge A now implements the smallest safe bridge plus local review refinement: a
 - sevenfold domain review passes for client workflow and export handling.
 - Hermes handoff remains orchestration-only.
 - Bo approves any implementation phase after reviewing the plan.
+- Tabulator export contract reviewed before implementation.
+- Tests cover no client overlay leakage, provenance required, reviewed-only export, deterministic shape, repeat export idempotency, no network calls, and no external writes.
 
 ## Hardening Items Deferred
 
@@ -73,13 +81,13 @@ Bridge A now implements the smallest safe bridge plus local review refinement: a
 
 ## Suggested First Implementation After Approval
 
-Bridge A implementation now includes:
+Tabulator export implementation should include:
 
-- `docs/fixtures/ontology-snapshot.v1.example.json`.
-- API preview/commit route for local mapping snapshots, creating review items only.
-- Review context for mapping candidates.
-- Field-level mapping review, provenance visibility, repeat-import safety, and conflict states.
-- Approved mapping storage in `Tag.external_ids_json`.
-- Tests for parse, field-level preview, review item creation, repeated import safety, duplicate source IDs, external ID conflicts, normalized matching, approval mutation, reject/defer non-mutation, malformed snapshots, no network calls, and cross-client leakage.
+- `BroadListerReviewedMediaExportBundle.v1` local JSON bundle generation.
+- Preview route/UI that shows eligible records, omitted records, provenance coverage, and forbidden overlay categories.
+- File/download export only; no Tabulator POST.
+- Eligible artifact types: reviewed articles, outlet references, byline references, global tags, provenance packets, import/source metadata.
+- Hard test fixture containing client overlay records to prove they are omitted.
+- Repeat export test with stable ordering and stable `stable_export_key`.
 
-Recommended next after Bo review: Tabulator export planning is now reasonable. One more local refinement pass is only needed if Bo wants explicit manual merge/update controls for conflict rows before any export planning.
+Recommended next after Bo review: implement local JSON export preview/download. Defer Tabulator API writes and Tabulator importer until the file contract is exercised.

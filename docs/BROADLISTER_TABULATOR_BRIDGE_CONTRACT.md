@@ -2,254 +2,353 @@
 
 ## Status
 
-Planning-only. No adapter is implemented in this phase.
+Planning-only. No export adapter is implemented in this phase.
+
+This contract defines the next safe bridge after local ontology snapshot import refinement: reviewed BroadLister media artifacts exported to a local JSON file that Tabulator may later import. BroadLister must not POST to Tabulator, import Tabulator runtime code, or require Tabulator to run.
 
 ## Intent
 
-Define safe data envelopes for future operator-triggered exchange between BroadLister and Tabulator. Tabulator stores canonical links, tags, link-tag associations, external source records, ontology proposals, and research artifacts. BroadLister stores media-specific journalist/outlet/article knowledge with provenance and client overlays.
+Tabulator stores canonical links, generic tags, link-tag edges, external source records, ontology proposals, and research artifacts. BroadLister stores media-specific journalist, outlet, article, byline, tag, citation, review, and client/campaign overlay data.
 
-The bridge must be file/snapshot-first before any API integration.
+The bridge should make reviewed public media intelligence portable without leaking Sevenfold client strategy or creating runtime coupling.
 
 ## Non-Negotiable Boundaries
 
-- BroadLister does not require Tabulator at runtime.
-- BroadLister does not write directly to Tabulator in the next implementation phase.
-- Tabulator import/export is operator-triggered.
-- Client overlay data is excluded unless using the explicit client relevance artifact shape.
-- No outreach or contact-action fields are exported.
-- Every artifact carries provenance and source system metadata.
+- No BroadLister runtime dependency on Tabulator, ProjectReckoner, Bucketer, Hermes, or sevenfold.
+- No direct Tabulator API writes in the first implementation.
+- No network calls in export generation.
+- Export is operator-triggered and previewed before file write.
+- Only approved/reviewed public media facts are export-eligible.
+- Every exported artifact must include provenance.
+- Client/campaign overlay fields are excluded by default.
+- No outreach, Gmail, contact-action, sequence, cadence, or relationship-warmth fields.
+- Repeat exports must be deterministic and idempotent by stable export keys.
+- Export serialization must be allowlist-based. Never implement as "copy object minus forbidden fields."
 
-## Mapping Summary
+## Tabulator Surface To Target
 
-| BroadLister | Tabulator |
-| --- | --- |
-| `Article.url_canonical` | `Link.canonicalUrl` |
-| `Article.url` | `Link.originalUrl` |
-| `Article.title` | `Link.title` |
-| `Article.excerpt` | `Link.description` |
-| `Outlet.name` | `Link.siteName` or metadata |
-| `ArticleTag` | `LinkTag` candidate |
-| `Tag` | `Tag` candidate or mapping reference |
-| `Citation` | `ResearchArtifact`, `Link.provenanceJson`, `ExternalSourceRecord.provenanceJson` |
-| `ImportBatch` | `Link.importBatchId`, `ExternalSourceRecord.importBatchId` |
-| `ReviewItem` | no direct equivalent; BroadLister review remains local |
+Read-only inspection shows Tabulator can later consume BroadLister exports through these concepts:
+
+- `Link`: canonical URL, original URL, title, description, site name, content type, source type, import batch, source path, provenance.
+- `ExternalSourceRecord`: source system/record ID, canonical URL, source URL, import batch, raw source metadata, provenance.
+- `ResearchArtifact`: text/JSON reference artifacts with canonical refs, source path, and provenance.
+- `Tag`: generic normalized tags with `tagType`.
+- `LinkTag`: link-tag association with source and confidence.
+- `OntologyProposal`: review-only ontology mutation proposals. BroadLister should not create these directly in phase one.
+
+## Export-Eligible BroadLister Artifacts
+
+Allowed only when the records are global public media facts and have provenance:
+
+- Reviewed `Article` records with canonical URL, title, outlet, publication metadata, excerpt, language, and article tags.
+- Reviewed `Outlet` references attached to exported articles or exported as source references.
+- Reviewed `Byline` relationships between articles and journalists.
+- Reviewed `Journalist` public identity references only when needed for byline context.
+- Reviewed global `Tag` records for topics, beats, formats, regions, languages, broad tags, and specific tags.
+- `Citation` and `ProvenanceLink` packets supporting exported facts.
+- `ImportBatch` / source metadata as provenance context.
+- Approved ontology/tag external references stored in `Tag.external_ids_json`.
+
+## Explicitly Forbidden By Default
+
+Never export these into generic Tabulator link/tag/research artifacts unless Bo approves a separate scoped client artifact:
+
+- Client-private notes.
+- Pitch angles.
+- Campaign strategy.
+- `CampaignContact.narrative_fit_json`.
+- `Campaign.constraints_json` / embargo notes.
+- `Campaign.embargo_until`.
+- Relationship warmth.
+- Outreach status.
+- Exclusions and exclusion reasons.
+- Approval-state rationale for client campaigns.
+- Private client relevance reasoning.
+- Contact methods, emails, handles, or lawful-to-store details.
+- Any field that exists only because a client/campaign overlay exists.
+
+If a future client-scoped export is approved, it must use a separate `BroadListerClientRelevanceArtifact` and must not become a generic Tabulator tag or link fact.
+
+## First Future Implementation Path
+
+1. Add a BroadLister export preview route that builds an in-memory `BroadListerReviewedMediaExportBundle`.
+2. Preview shows counts, included record IDs, provenance coverage, and excluded overlay categories.
+3. Operator confirms a local JSON file export.
+4. BroadLister writes a local file under an operator-selected/export directory or returns a download response.
+5. A later Tabulator-side import adapter consumes that JSON file.
+6. Direct Tabulator API writes remain deferred until Bo approves them.
+
+No server-side path reading from Tabulator and no Tabulator imports in BroadLister.
+
+## Bundle Shape
+
+```ts
+interface BroadListerReviewedMediaExportBundle {
+  schema: "BroadListerReviewedMediaExportBundle.v1";
+  export_schema_version: "v1";
+  export_id: string;
+  exported_at: string;
+  exported_by: string;
+  source_system: "broadlister";
+  export_scope: "reviewed_public_media";
+  source_tag_or_commit?: string;
+  source_instance: {
+    repo: "BroadLister";
+    database_id?: string;
+    git_commit?: string;
+  };
+  validation_limits: string[];
+  eligibility_policy: {
+    requires_reviewed_records: true;
+    requires_provenance: true;
+    excludes_client_overlays: true;
+    excludes_outreach_fields: true;
+  };
+  articles: BroadListerReviewedArticleLink[];
+  outlets: BroadListerReviewedOutletReference[];
+  bylines: BroadListerReviewedBylineReference[];
+  tags: BroadListerTagMapping[];
+  provenance: BroadListerProvenancePacket[];
+  artifacts: BroadListerReviewedMediaArtifact[]; // article-centered assembled view for importer convenience
+  omitted: Array<{
+    broadlister_model: string;
+    id: string;
+    reason: string;
+  }>;
+  redaction_report: {
+    policy: "deny_client_overlay_fields";
+    redacted_field_count: number;
+    denied_fields_checked: string[];
+    omitted_record_count: number;
+  };
+  summary: {
+    article_count: number;
+    outlet_count: number;
+    byline_count: number;
+    tag_count: number;
+    provenance_packet_count: number;
+  };
+}
+```
+
+Hermes review condition: BroadLister should treat this as a neutral source bundle. The future Tabulator importer owns the mapping into Tabulator tables and any `ResearchArtifact` decisions.
 
 ## BroadListerReviewedMediaArtifact
 
-Use this for exporting reviewed public media facts from BroadLister for Tabulator intake.
+One artifact represents one reviewed article/link export unit with attached outlet, byline, tag, and provenance references. Outlet-only and journalist-only exports should be avoided until Tabulator has an explicit non-link import lane.
 
 ```ts
 interface BroadListerReviewedMediaArtifact {
   schema: "BroadListerReviewedMediaArtifact.v1";
   artifact_id: string;
+  stable_export_key: string; // e.g. broadlister:article:<article_id>:<url_hash>
+  review_state: "reviewed";
   exported_at: string;
-  exported_by: string;
   source_system: "broadlister";
-  review_state: "approved";
-  media_type: "article" | "outlet" | "journalist" | "byline";
-  article?: {
-    id: string;
-    canonical_url: string;
-    original_url?: string;
-    title: string;
-    description?: string;
-    published_at?: string;
-    language?: string;
-    outlet_id: string;
-    outlet_name: string;
-  };
-  outlet?: {
-    id: string;
-    name: string;
-    home_url?: string;
-    home_url_host?: string;
-    outlet_type?: string;
-    region?: string;
-    country?: string;
-  };
-  journalist?: {
-    id: string;
-    display_name: string;
-    public_profile_urls?: string[];
-  };
-  byline?: {
-    article_id: string;
-    journalist_id: string;
-    confidence: "low" | "medium" | "high";
-  };
-  global_tags: Array<{
-    tag_id: string;
-    slug: string;
-    name: string;
-    kind: "beat" | "topic" | "format" | "region" | "language" | "broad" | "specific";
-    confidence: "low" | "medium" | "high";
-    ontology_core_id?: string;
-    ontology_core_slug?: string;
-    tabulator_tag_id?: string;
-  }>;
-  provenance: Array<{
-    citation_id: string;
-    source_type: string;
-    source_url?: string;
-    source_local_path?: string;
-    observed_at: string;
-    payload_hash?: string;
-    target_type?: string;
-    target_field?: string;
-    assertion_kind?: "supports" | "contradicts" | "proposes";
-    confidence?: "low" | "medium" | "high";
-  }>;
-  tabulator_hint: {
-    content_type: "article" | "profile" | "source" | "other";
-    source_type: "broadlister_export";
-    source_path: string[];
-    canonical_ref: string;
+  article: BroadListerReviewedArticleLink;
+  outlet?: BroadListerReviewedOutletReference;
+  bylines: BroadListerReviewedBylineReference[];
+  tags: BroadListerTagMapping[];
+  provenance: BroadListerProvenancePacket[];
+  tabulator_target: {
+    preferred_entity: "Link";
+    link_source_type: "broadlister_export";
+    link_content_type: "article";
+    external_source_system: "broadlister";
+    external_source_record_id: string;
+    source_path: ["BroadLister", "ReviewedMedia", string];
+    research_artifact_type?: "source_pack" | "local_file_ref" | "note";
   };
 }
 ```
 
-## BroadListerClientRelevanceArtifact
-
-Use this only for explicit client/campaign exports. It is not a global media fact and must not be converted into generic Tabulator tags.
+## BroadListerReviewedArticleLink
 
 ```ts
-interface BroadListerClientRelevanceArtifact {
-  schema: "BroadListerClientRelevanceArtifact.v1";
-  artifact_id: string;
-  exported_at: string;
-  exported_by: string;
-  source_system: "broadlister";
-  scope: "client_overlay" | "campaign_overlay";
-  client: {
-    id: string;
-    slug: string;
-    display_name: string;
-  };
-  campaign?: {
-    id: string;
-    slug: string;
-    name: string;
-  };
-  subject: {
-    article_id?: string;
-    journalist_id?: string;
-    outlet_id?: string;
-    canonical_url?: string;
-    title?: string;
-    display_name?: string;
-  };
-  relevance: {
-    label: string;
-    confidence: "low" | "medium" | "high";
-    rationale: string;
-    narrative_fit_json?: Record<string, unknown>;
-    constraints_context?: Record<string, unknown>;
-  };
-  safety: {
-    global_fact: false;
-    may_write_global_tag: false;
-    may_export_to_generic_tabulator_tag: false;
-    requires_operator_approval: true;
-  };
-  provenance: Array<{
-    citation_id: string;
-    source_type: string;
-    source_url?: string;
-    observed_at: string;
-    confidence?: "low" | "medium" | "high";
-  }>;
-}
-```
-
-## BroadListerTabulatorLinkCandidate
-
-Use this for importing Tabulator links into BroadLister review queue.
-
-```ts
-interface BroadListerTabulatorLinkCandidate {
-  schema: "BroadListerTabulatorLinkCandidate.v1";
-  source_system: "tabulator";
-  source_record_id: string;
-  import_batch_id?: string;
+interface BroadListerReviewedArticleLink {
+  broadlister_article_id: string;
   canonical_url: string;
   original_url?: string;
-  title?: string;
+  title: string;
   description?: string;
-  site_name?: string;
-  content_type?: "article" | "tool" | "video" | "repo" | "other";
-  tabulator_tags: Array<{
-    id?: string;
-    name: string;
-    normalized_name?: string;
-    tag_type?: "folder" | "user" | "ai" | "system";
-    confidence?: number;
-    source?: string;
-  }>;
-  external_source_record?: {
-    source_system: string;
-    source_record_id?: string;
-    source_url?: string;
-    raw_source_metadata?: Record<string, unknown>;
+  published_at?: string;
+  language?: string;
+  outlet_id: string;
+  outlet_name: string;
+  tabulator_link_hint: {
+    canonicalUrl: string;
+    originalUrl?: string;
+    title: string;
+    description?: string;
+    siteName?: string;
+    contentType: "article";
   };
-  provenance: {
-    source_path?: string[];
-    provenance_json?: Record<string, unknown>;
-    observed_at: string;
-  };
-  proposed_broadlister_actions: Array<
-    | "article_candidate"
-    | "outlet_candidate"
-    | "tag_candidate"
-    | "article_tag_candidate"
-  >;
 }
 ```
 
-## Export As ResearchArtifact
-
-If Tabulator intake uses `ResearchArtifact`, map BroadLister artifacts as:
+## BroadListerReviewedOutletReference
 
 ```ts
-interface BroadListerTabulatorResearchArtifactPayload {
-  artifact_type: "source_pack" | "local_file_ref" | "note";
-  title: string;
-  summary?: string;
-  canonical_ref: string;
-  content_text?: string;
-  content_json: {
-    schema: "BroadListerReviewedMediaArtifact.v1" | "BroadListerClientRelevanceArtifact.v1";
-    broadlister_artifact: Record<string, unknown>;
-    tags: ["#pkb", "broadlister"];
-  };
-  source_path: ["BroadLister", "MediaDesk", string];
-  provenance: {
-    actor: string;
-    marker: "#pkb";
-    source_system: "broadlister";
-    exported_at: string;
+interface BroadListerReviewedOutletReference {
+  broadlister_outlet_id: string;
+  name: string;
+  slug: string;
+  home_url?: string;
+  home_url_host?: string;
+  outlet_type?: string;
+  region?: string;
+  country?: string;
+  tabulator_metadata: {
+    siteName: string;
+    source_kind: "media_outlet";
   };
 }
 ```
 
-## Review Rules
+## BroadListerReviewedBylineReference
 
-Tabulator-to-BroadLister:
+```ts
+interface BroadListerReviewedBylineReference {
+  broadlister_byline_id: string;
+  broadlister_article_id: string;
+  broadlister_journalist_id: string;
+  journalist_display_name: string;
+  position: number;
+  confidence: "low" | "medium" | "high";
+  provenance_ids: string[];
+  tabulator_metadata: {
+    relation: "authored_by";
+    export_as_metadata_only: true;
+  };
+}
+```
 
-1. Import file/snapshot only.
-2. Create `ImportBatch(source_type='tabulator_snapshot')`.
-3. Create review items for article/outlet/tag/article-tag candidates.
-4. Operator approves or rejects through existing reconciliation.
+## BroadListerTagMapping
 
-BroadLister-to-Tabulator:
+```ts
+interface BroadListerTagMapping {
+  broadlister_tag_id: string;
+  slug: string;
+  name: string;
+  kind: "beat" | "topic" | "format" | "region" | "language" | "broad" | "specific";
+  confidence: "low" | "medium" | "high";
+  source: "article_tag" | "outlet_tag" | "journalist_tag" | "operator_review";
+  ontology_core_id?: string;
+  ontology_core_slug?: string;
+  tabulator_tag_id?: string;
+  relationship_to_ontology?: "exact" | "broader" | "narrower" | "related" | "none";
+  tabulator_tag_hint: {
+    name: string;
+    normalized_name: string;
+    tag_type: "system" | "user";
+    link_tag_source: "broadlister";
+  };
+}
+```
 
-1. Export reviewed artifacts to file.
-2. Operator inspects payload.
-3. A later Tabulator-side tool may import it.
-4. No BroadLister direct API POST until Bo approves a write-back phase.
+## BroadListerProvenancePacket
 
-## Risks
+```ts
+interface BroadListerProvenancePacket {
+  packet_id: string;
+  citation_id: string;
+  provenance_link_id?: string;
+  source_type: string;
+  source_url?: string;
+  source_local_path?: string;
+  observed_at: string;
+  captured_by?: string;
+  payload_hash?: string;
+  target: {
+    broadlister_model: "Article" | "Outlet" | "Journalist" | "Byline" | "Tag";
+    broadlister_id: string;
+    field?: string;
+  };
+  assertion_kind: "supports" | "contradicts" | "proposes";
+  confidence: "low" | "medium" | "high";
+  tabulator_provenance_json: {
+    source_system: "broadlister";
+    citation_id: string;
+    observed_at: string;
+    target_field?: string;
+    explanation: string;
+  };
+}
+```
 
-- Tabulator tag types are generic (`folder`, `user`, `ai`, `system`); BroadLister tag kinds are media-specific. Always map through review.
-- Tabulator links may include non-media URLs. BroadLister should not import non-media links as articles without operator review.
-- Client relevance artifacts must not be mixed into generic link tags.
-- Tabulator AI suggestions must remain suggestions, not BroadLister global facts.
+## Tabulator Import Mapping
+
+A future Tabulator-side adapter should map:
+
+- `BroadListerReviewedArticleLink` -> `Link`.
+- `BroadListerReviewedMediaArtifact.stable_export_key` -> `ExternalSourceRecord.sourceRecordId`.
+- `BroadListerReviewedMediaArtifact.tabulator_target.source_path` -> `Link.sourcePathJson`.
+- `BroadListerProvenancePacket.tabulator_provenance_json` -> `Link.provenanceJson` and/or `ExternalSourceRecord.provenanceJson`.
+- `BroadListerTagMapping.tabulator_tag_hint` -> `Tag` plus `LinkTag`.
+- Full artifact JSON -> optional `ResearchArtifact.contentJson`.
+
+BroadLister should produce the file. Tabulator should own the importer.
+
+## Allowlist Fields
+
+The first implementation should only serialize these BroadLister model fields:
+
+- `Article`: `id`, `url`, `url_canonical`, `title`, `published_at`, `outlet_id`, `byline_text`, `language`, `excerpt`, `fetch_hash`, `created_at`, `updated_at`.
+- `Outlet`: `id`, `name`, `name_norm`, `slug`, `outlet_type`, `home_url`, `home_url_host`, `region`, `country`, `languages_json`, `notes_public`.
+- `Byline`: `id`, `article_id`, `journalist_id`, `position`, `confidence`, `created_at`.
+- `Journalist`: `id`, `display_name`, `display_name_norm` only for byline display context.
+- `Tag`: `id`, `name`, `slug`, `kind`, `description`, `external_ids_json`.
+- `ArticleTag`, `OutletTag`, `JournalistTag`: IDs, linked IDs, `confidence`, `citation_id`, `scope` only when scope is global/public.
+- `Citation`: `id`, `source_type`, `source_url`, `source_local_path`, `observed_at`, `captured_by`, `notes`, `payload_hash`.
+- `ProvenanceLink`: `id`, `citation_id`, `target_type`, `target_id`, `target_field`, `assertion_kind`, `confidence`.
+- `ImportBatch` / `ImportBatchRow`: IDs, source type, label, row index, mapped/source metadata needed for provenance only.
+
+Everything else is omitted unless a later approved contract adds it.
+
+## Forbidden-Field Test Denylist
+
+The implementation test fixture must include records containing these field names and prove they do not appear in generic Tabulator export JSON:
+
+- `pitch_angle`
+- `target_rationale`
+- `suitability_note`
+- `narrative_fit_json`
+- `exclusion_flag`
+- `exclusion_reason`
+- `embargo_until`
+- `embargo_note`
+- `relationship_warmth`
+- `notes_private`
+- `summary_private`
+- `ClientNote.body_md`
+- `ClientApproval.note`
+- `Campaign.constraints_json`
+- `client_id`
+- `campaign_id`
+- `campaign_list_id`
+
+## Safety Tests Required Before Implementation
+
+Implementation must not begin until tests are planned for:
+
+- No client overlay leakage: exported JSON contains no campaign/client-private fields.
+- Provenance required: each artifact has at least one citation/provenance packet.
+- Reviewed-only export: draft/pending/rejected review proposals and unreviewed imports do not export.
+- Deterministic shape: same DB state produces stable export keys and stable sorted output.
+- Repeat export idempotency: repeated file exports do not change IDs except `exported_at`/`export_id`.
+- No network calls: export preview/file generation does not call `fetch`, Tabulator APIs, or ProjectReckoner.
+- No external writes: export generation writes only the operator-selected local file/download.
+- Preview-first behavior: operator sees counts, omitted rows, missing-provenance rows, redaction report, and destination before write.
+- Fail-closed provenance: normal export excludes or blocks records missing provenance. A diagnostic/incomplete export mode would need separate approval.
+- Deny-list still passes and no Tabulator package appears in BroadLister runtime dependencies.
+- Cross-client leakage integration test still passes.
+
+## Deferred
+
+- Direct Tabulator API POST.
+- Tabulator-side importer implementation.
+- Exporting client relevance artifacts.
+- Exporting campaign or outreach-prep data.
+- Creating Tabulator `OntologyProposal` records.
+- Bidirectional sync or automatic mirror jobs.
+- Runtime dependency on ProjectReckoner/Tabulator.
