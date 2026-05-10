@@ -2,7 +2,11 @@
 
 ## Recommended Next Phase
 
-Next phase should be a planning-first alignment phase for ontology and tagging interoperability. It should not hard-couple BroadLister to ProjectReckoner, Tabulator, TaskReckoner, Bucketer, Hermes, or sevenfold at runtime.
+Next phase should be `A) ontology-core / Tabulator alignment planning`.
+
+The browser-validation and hardening pass added Playwright coverage, expanded API hardening tests, documented Tailscale access, and preserved the no-outreach and cross-client safety posture. No additional hardening block is currently severe enough to defer ontology planning.
+
+This remains planning-first alignment for ontology and tagging interoperability. It should not hard-couple BroadLister to ProjectReckoner, Tabulator, TaskReckoner, Bucketer, Hermes, or sevenfold at runtime.
 
 Recommended phase name: `phase-4-ontology-alignment-planning`.
 
@@ -53,10 +57,17 @@ Design a safe bridge between BroadLister's media ontology and the broader Sevenf
 - Clear distinction between global media facts and client/campaign interpretations.
 - No runtime dependency on ProjectReckoner or Tabulator.
 - Tests prove BroadLister starts and verifies independently.
+- Playwright browser tests remain green on desktop and mobile viewports.
 - Export shapes remain compatible with `06_media_lists/`, `02_source_audit/`, and `09_approvals/`.
 - sevenfold domain review passes for client workflow and export handling.
 - Hermes handoff remains orchestration-only.
 - Bo approves any implementation phase after reviewing the plan.
+
+## Hardening Items Deferred
+
+- Full automated accessibility audit with `axe-core`: defer until the next UI-focused pass because current Playwright checks cover basic labels, visible navigation, touch targets, and horizontal overflow without adding another dependency.
+- Backup restore automation: documented procedure is sufficient for the current local-first MVP. Add an automated restore rehearsal before destructive migrations.
+- Production packaging/deployment: defer until Bo decides whether BroadLister should remain dev-run only or receive a local packaged runner. Do not add systemd without explicit approval.
 
 ## Suggested First Implementation After Approval
 

@@ -14,3 +14,15 @@ Current implementation target: MVP through Phase 3.
 - No Gmail, email-send, DM, webhook, or outreach automation
 - BroadLister runtime remains independent from ProjectReckoner, TaskReckoner, Bucketer, Tabulator, BusyIntern, Hermes, and sevenfold
 
+## Verification
+
+```bash
+pnpm verify
+pnpm check:global-models
+pnpm check:denylist
+pnpm build
+pnpm test:e2e
+pnpm verify:full
+```
+
+Browser validation uses Playwright. Screenshots and traces are written under `test-results/` and are ignored by git.

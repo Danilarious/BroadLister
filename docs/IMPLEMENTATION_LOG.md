@@ -965,3 +965,82 @@ Started post-MVP UI polish from tag `phase-3-complete` on branch `phase-3-ui-pol
 ### Next Recommended Action
 
 - Run final verification after this log entry, commit the UI/docs pass, tag `phase-3-ui-polish-complete`, and push branch/tag.
+
+---
+
+## 2026-05-09T19:25:23-07:00 — Browser Validation And Hardening
+
+### Action
+
+Started branch `phase-3-hardening-browser` from `phase-3-ui-polish-complete`. Started API localhost-only and web bound to the ThinkPad Tailscale IP for iPhone access. Installed Playwright browser validation, added desktop/mobile smoke tests, added API hardening tests, created a generic global Codex browser validation skill, and updated runbook/README/next-plan docs. Ontology alignment remains planning-only and is not implemented in this pass.
+
+### Files Changed
+
+- `.gitignore`
+- `README.md`
+- `package.json`
+- `pnpm-lock.yaml`
+- `playwright.config.ts`
+- `e2e/broadlister-smoke.spec.ts`
+- `apps/api/test/hardening.test.ts`
+- `docs/BROADLISTER_OPERATOR_RUNBOOK.md`
+- `docs/BROADLISTER_NEXT_DEVELOPMENT_PLAN.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `/home/bxby/.codex/skills/browser-ui-validation/SKILL.md`
+
+### Commands Run
+
+- `tailscale ip -4`: exit 0; `100.109.2.15`
+- `tailscale status --json`: exit 0; MagicDNS `bxby-thinkpad.tail54427b.ts.net`
+- `pnpm --filter @broadlister/api dev`: running; API bound `127.0.0.1:3021`
+- `pnpm --filter @broadlister/web exec vite --host 100.109.2.15 --port 4100`: running; web bound `100.109.2.15:4100`
+- `pnpm add -D @playwright/test -w`: exit 0
+- `pnpm exec playwright install chromium`: exit 0
+- `pnpm verify`: exit 0 after correcting one hardening assertion
+- `pnpm check:global-models`: exit 0
+- `pnpm check:denylist`: exit 0
+- `pnpm build`: exit 0
+- `pnpm test:e2e`: exit 0 after pinning mobile project to Chromium and explicit screen assertions
+- `pnpm test:mobile`: exit 0
+- `pnpm screenshots`: exit 0
+- `pnpm verify:full`: exit 0
+- `pnpm backup:db`: exit 0; wrote `data/backups/broadlister-2026-05-10T02-26-09-527Z.sqlite`
+
+### Tests Run
+
+- API tests: 6 files, 15 tests passed, including real cross-client leakage and new hardening tests.
+- Web tests: 1 file, 3 tests passed.
+- Playwright: 6 tests passed across desktop Chromium and mobile Chromium.
+- Mobile-only Playwright: 3 tests passed.
+- Screenshot-marked Playwright tests: 4 tests passed.
+- Global model scope guard: pass.
+- Dependency deny-list guard: pass.
+- Build: pass.
+- Phase backup: `data/backups/broadlister-2026-05-10T02-26-09-527Z.sqlite`
+
+### Runtime Access
+
+- iPhone URL: `http://100.109.2.15:4100/`
+- MagicDNS URL: `http://bxby-thinkpad.tail54427b.ts.net:4100/`
+- API remains localhost-only behind Vite proxy.
+- Mac fallback: `ssh -L 4100:127.0.0.1:4100 -L 3021:127.0.0.1:3021 bxby@bxby-thinkpad`
+
+### Artifacts
+
+- Screenshots: `test-results/screenshots/`
+- Playwright traces/reports on failure: `test-results/playwright/`, `playwright-report/`
+- Artifacts are ignored by git.
+
+### Blockers / Stopping Conditions
+
+- None. No public tunnel, credentials, outbound messaging path, destructive migration, systemd change, or runtime coupling introduced.
+
+### Rollback Notes
+
+- Revert the forthcoming branch commits to remove repo changes.
+- Remove `/home/bxby/.codex/skills/browser-ui-validation/` to undo the global skill.
+- Stop dev servers with SIGINT in their terminal sessions when iPhone testing is complete.
+
+### Next Recommended Action
+
+- Run `pnpm verify:full`, back up the DB, commit, tag, push, then proceed only to ontology-core/Tabulator alignment planning if Bo approves.

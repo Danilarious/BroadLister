@@ -22,6 +22,36 @@ pnpm dev
 
 Open `http://127.0.0.1:4100` on the ThinkPad.
 
+## Tailscale Access From iPhone
+
+Prefer Tailscale-only access over LAN-wide or public tunnels.
+
+Current ThinkPad Tailscale identity:
+
+- IPv4: `100.109.2.15`
+- MagicDNS: `bxby-thinkpad.tail54427b.ts.net`
+
+Start API localhost-only:
+
+```bash
+pnpm --filter @broadlister/api dev
+```
+
+Start the web app bound only to the ThinkPad Tailscale IP:
+
+```bash
+pnpm --filter @broadlister/web exec vite --host 100.109.2.15 --port 4100
+```
+
+Open one of these on the iPhone while connected to the same Tailscale tailnet:
+
+```text
+http://100.109.2.15:4100/
+http://bxby-thinkpad.tail54427b.ts.net:4100/
+```
+
+This keeps the API bound to `127.0.0.1:3021`; the Vite dev server proxies `/api` locally from the ThinkPad. Do not create Cloudflare tunnels or public exposure for BroadLister.
+
 ## Common Commands
 
 ```bash
@@ -49,11 +79,11 @@ Then open `http://127.0.0.1:4100` on the Mac. This keeps BroadLister bound to lo
 Phone access requires an intentional temporary network path. Preferred options:
 
 - Use a trusted private tunnel/VPN to the ThinkPad, then open the forwarded web port.
-- Temporarily bind only the Vite web server to the LAN and rely on its local API proxy:
+- Temporarily bind only the Vite web server to Tailscale or a trusted LAN and rely on its local API proxy:
 
 ```bash
 pnpm --filter @broadlister/api dev
-pnpm --filter @broadlister/web dev -- --host 0.0.0.0
+pnpm --filter @broadlister/web exec vite --host <tailscale-or-lan-ip> --port 4100
 ```
 
 Find the ThinkPad LAN address with:
@@ -62,7 +92,35 @@ Find the ThinkPad LAN address with:
 hostname -I
 ```
 
-Open `http://<thinkpad-lan-ip>:4100` from the phone while both devices are on the trusted LAN. Stop the dev server after use. Do not expose BroadLister to the public internet.
+Open `http://<thinkpad-ip>:4100` from the phone while both devices are on the trusted network. Stop the dev server after use. Do not expose BroadLister to the public internet.
+
+## Browser Validation
+
+Install Playwright browsers once on the ThinkPad:
+
+```bash
+pnpm exec playwright install chromium
+```
+
+Run browser smoke tests:
+
+```bash
+pnpm test:e2e
+pnpm test:mobile
+pnpm screenshots
+```
+
+Useful modes:
+
+- `pnpm test:e2e`: desktop and mobile browser smoke suite.
+- `pnpm test:mobile`: mobile viewport only.
+- `pnpm test:ui`: interactive Playwright UI.
+- `pnpm screenshots`: captures screenshot-marked flows.
+
+Artifacts are ignored by git:
+
+- `test-results/`
+- `playwright-report/`
 
 ## Backup And Restore
 
@@ -95,6 +153,8 @@ pnpm verify
 pnpm check:global-models
 pnpm check:denylist
 pnpm build
+pnpm test:e2e
+pnpm verify:full
 ```
 
 Expected safeguards:
@@ -105,6 +165,7 @@ Expected safeguards:
 - Web tests pass.
 - Dependency deny-list blocks send-side mail packages.
 - Global Prisma models do not carry `client_id`.
+- Playwright browser smoke tests pass on desktop and mobile viewports.
 
 ## Operator Safety Rules
 
