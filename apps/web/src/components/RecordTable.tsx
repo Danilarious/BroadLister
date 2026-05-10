@@ -28,11 +28,10 @@ export function RecordTable({ records, columns, selectedId, onSelect }: Props) {
             onClick={() => onSelect(record)}
             tabIndex={0}
           >
-            {columns.map((column) => <td key={column}>{formatValue(record[column])}</td>)}
+            {columns.map((column) => <td data-label={column.replace(/_/g, " ")} key={column}>{formatValue(record[column])}</td>)}
           </tr>
         ))}
       </tbody>
     </table>
   );
 }
-

@@ -31,6 +31,8 @@ export function App() {
   const [clients, setClients] = useState<Client[]>([]);
   const [activeClientId, setActiveClientId] = useState("");
   const [error, setError] = useState<string>();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isBusy, setIsBusy] = useState(false);
   const [importBatchId, setImportBatchId] = useState<string>();
 
   const activeClient = clients.find((client) => client.id === activeClientId);
@@ -47,8 +49,9 @@ export function App() {
   }
 
   useEffect(() => {
-    refreshClients().catch((caught: Error) => setError(caught.message));
-    refreshReviews().catch((caught: Error) => setError(caught.message));
+    Promise.all([refreshClients(), refreshReviews()])
+      .catch((caught: Error) => setError(caught.message))
+      .finally(() => setIsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -72,19 +75,34 @@ export function App() {
   }, [screen, selectedReview]);
 
   async function approve(item: ReviewItem) {
-    await approveReview(item.id);
-    await refreshReviews();
+    setIsBusy(true);
+    try {
+      await approveReview(item.id);
+      await refreshReviews();
+    } finally {
+      setIsBusy(false);
+    }
   }
 
   async function reject(item: ReviewItem) {
-    await rejectReview(item.id, "Rejected in Phase 2 UI");
-    await refreshReviews();
+    setIsBusy(true);
+    try {
+      await rejectReview(item.id, "Rejected in the BroadLister UI");
+      await refreshReviews();
+    } finally {
+      setIsBusy(false);
+    }
   }
 
   async function createTraceClient() {
-    const client = await createResource("clients", { slug: "trace-finance", display_name: "Trace Finance" }) as Client;
-    await refreshClients();
-    setActiveClientId(client.id);
+    setIsBusy(true);
+    try {
+      const client = await createResource("clients", { slug: `trace-finance-${Date.now()}`, display_name: "Trace Finance" }) as Client;
+      await refreshClients();
+      setActiveClientId(client.id);
+    } finally {
+      setIsBusy(false);
+    }
   }
 
   const counts = useMemo(() => ({
@@ -97,7 +115,7 @@ export function App() {
     <main className="shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">Sevenfold MediaDesk prototype</p>
+          <p className="eyebrow">Sevenfold MediaDesk</p>
           <h1>BroadLister</h1>
         </div>
         <label className="client-switcher">
@@ -117,15 +135,16 @@ export function App() {
         ))}
       </nav>
 
-      {error && <div className="error" role="alert">{error}</div>}
+      {error && <div className="error" role="alert"><strong>Something needs attention.</strong><span>{error}</span></div>}
+      {isLoading && <div className="notice" role="status">Loading BroadLister workspace.</div>}
 
       {screen === "dashboard" && (
         <section className="dashboard">
           <div className="hero panel">
             <div>
-              <p className="eyebrow">Phase 2 operator UI</p>
-              <h2>Review first. Cite facts. Keep client strategy scoped.</h2>
-              <p>Browse global media records, import proposals, inspect provenance, and clear review items without adding any outreach automation.</p>
+              <p className="eyebrow">Media intelligence workspace</p>
+              <h2>Build sourced media lists without leaking client strategy.</h2>
+              <p>Review proposed records, inspect provenance, build campaign overlays, approve lists, and export operator-facing artifacts. BroadLister records work, it does not send outreach.</p>
             </div>
             <aside>
               <strong>Safety posture</strong>
@@ -133,14 +152,14 @@ export function App() {
             </aside>
           </div>
           <div className="metric-grid">
-            <div className="metric"><span>{counts.pendingReviews}</span><strong>Pending review items</strong></div>
-            <div className="metric"><span>{counts.currentRecords}</span><strong>Rows in active directory</strong></div>
-            <div className="metric"><span>{counts.activeClient}</span><strong>Active client</strong></div>
+            <div className="metric"><span>{counts.pendingReviews}</span><strong>Pending review</strong></div>
+            <div className="metric"><span>{counts.currentRecords}</span><strong>Current rows</strong></div>
+            <div className="metric"><span>{counts.activeClient}</span><strong>Selected client</strong></div>
           </div>
           <div className="actions">
-            <button onClick={() => setScreen("imports")}>Start CSV import</button>
-            <button onClick={() => setScreen("review")}>Open review queue</button>
-            <button className="secondary" onClick={createTraceClient}>Add Trace Finance client</button>
+            <button onClick={() => setScreen("imports")}>Import records</button>
+            <button onClick={() => setScreen("review")}>Review proposals</button>
+            <button className="secondary" disabled={isBusy} onClick={createTraceClient}>{isBusy ? "Adding client" : "Add Trace Finance client"}</button>
           </div>
         </section>
       )}

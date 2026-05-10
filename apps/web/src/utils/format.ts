@@ -1,5 +1,5 @@
 export function formatValue(value: unknown): string {
-  if (value === null || value === undefined || value === "") return "—";
+  if (value === null || value === undefined || value === "") return "Not set";
   if (typeof value === "string") {
     if ((value.startsWith("{") && value.endsWith("}")) || (value.startsWith("[") && value.endsWith("]"))) {
       try {
@@ -21,4 +21,3 @@ export function safeJson(value: string): unknown {
     return value;
   }
 }
-

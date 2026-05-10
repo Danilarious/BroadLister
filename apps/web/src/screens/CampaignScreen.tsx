@@ -11,6 +11,7 @@ export function CampaignScreen({ activeClient }: Props) {
   const [journalists, setJournalists] = useState<ApiRecord[]>([]);
   const [selectedContact, setSelectedContact] = useState<CampaignContact>();
   const [message, setMessage] = useState<string>();
+  const [busy, setBusy] = useState(false);
 
   async function refresh() {
     if (!activeClient) return;
@@ -36,74 +37,94 @@ export function CampaignScreen({ activeClient }: Props) {
   const list = campaign?.lists[0];
 
   async function createStarterWorkspace() {
-    const createdCampaign = await createOverlayResource("campaigns", {
-      client_id: client.id,
-      name: "Q3 Launch",
-      slug: `q3-launch-${Date.now()}`,
-      objective_short: "Build an approved, sourced media list.",
-      constraints_required: true,
-      constraints_json: {
-        version: 1,
-        approved_messaging: ["Use only approved client claims."],
-        approved_claims: [],
-        forbidden_claims: ["No unapproved performance claims."],
-        legal_caveats: [],
-        outreach_windows: [],
-        spokesperson_availability: [],
-        geographic_constraints: [],
-        sensitive_topics: [],
-        competitor_conflicts: [],
-        approval_requirements: ["ClientApproval required before outreach-ready export."],
-        source_fact_check_requirements: ["Every fact-bearing field needs provenance."]
-      }
-    });
-    await createOverlayResource("campaign-lists", {
-      campaign_id: createdCampaign.id,
-      name: "Tier 1 trade press",
-      description: "Starter Phase 3 list"
-    });
-    await refresh();
+    setBusy(true);
+    try {
+      const createdCampaign = await createOverlayResource("campaigns", {
+        client_id: client.id,
+        name: "Q3 Launch",
+        slug: `q3-launch-${Date.now()}`,
+        objective_short: "Build an approved, sourced media list.",
+        constraints_required: true,
+        constraints_json: {
+          version: 1,
+          approved_messaging: ["Use only approved client claims."],
+          approved_claims: [],
+          forbidden_claims: ["No unapproved performance claims."],
+          legal_caveats: [],
+          outreach_windows: [],
+          spokesperson_availability: [],
+          geographic_constraints: [],
+          sensitive_topics: [],
+          competitor_conflicts: [],
+          approval_requirements: ["ClientApproval required before outreach-ready export."],
+          source_fact_check_requirements: ["Every fact-bearing field needs provenance."]
+        }
+      });
+      await createOverlayResource("campaign-lists", {
+        campaign_id: createdCampaign.id,
+        name: "Tier 1 trade press",
+        description: "Starter campaign list"
+      });
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function addFirstJournalist() {
     if (!list || journalists.length === 0) return;
-    await createOverlayResource("campaign-contacts", {
-      campaign_list_id: list.id,
-      journalist_id: journalists[0].id,
-      target_score: 3,
-      target_rationale: "Operator rationale scoped to this client.",
-      approval_state: "draft",
-      narrative_fit_json: {
-        version: 1,
-        narrative_angle: "Why this journalist fits this campaign.",
-        coverage_rationale: "Grounded in prior coverage.",
-        evidence_byline_ids: [],
-        likely_objections: [],
-        competing_narratives: [],
-        confidence: "medium",
-        source_citations_json: [],
-        operator_notes: ""
-      }
-    });
-    await refresh();
+    setBusy(true);
+    try {
+      await createOverlayResource("campaign-contacts", {
+        campaign_list_id: list.id,
+        journalist_id: journalists[0].id,
+        target_score: 3,
+        target_rationale: "Operator rationale scoped to this client.",
+        approval_state: "draft",
+        narrative_fit_json: {
+          version: 1,
+          narrative_angle: "Why this journalist fits this campaign.",
+          coverage_rationale: "Grounded in prior coverage.",
+          evidence_byline_ids: [],
+          likely_objections: [],
+          competing_narratives: [],
+          confidence: "medium",
+          source_citations_json: [],
+          operator_notes: ""
+        }
+      });
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function saveContact(updates: Record<string, unknown>) {
     if (!selectedContact) return;
-    await updateOverlayResource("campaign-contacts", selectedContact.id, updates);
-    await refresh();
+    setBusy(true);
+    try {
+      await updateOverlayResource("campaign-contacts", selectedContact.id, updates);
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function approveList() {
     if (!list) return;
-    await createOverlayResource("client-approvals", {
-      client_id: client.id,
-      subject_type: "campaign_list",
-      subject_id: list.id,
-      state: "approved",
-      note: "Approved in BroadLister Phase 3 UI."
-    });
-    await refresh();
+    setBusy(true);
+    try {
+      await createOverlayResource("client-approvals", {
+        client_id: client.id,
+        subject_type: "campaign_list",
+        subject_id: list.id,
+        state: "approved",
+        note: "Approved in BroadLister UI."
+      });
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -114,7 +135,7 @@ export function CampaignScreen({ activeClient }: Props) {
             <p className="eyebrow">Client overlay</p>
             <h2>{client.display_name} Campaign Workspace</h2>
           </div>
-          {!campaign && <button onClick={createStarterWorkspace}>Create starter campaign</button>}
+          {!campaign && <button disabled={busy} onClick={createStarterWorkspace}>{busy ? "Creating campaign" : "Create starter campaign"}</button>}
         </div>
 
         {campaign && (
@@ -124,8 +145,8 @@ export function CampaignScreen({ activeClient }: Props) {
               <pre>{campaign.constraints_json ? JSON.stringify(JSON.parse(campaign.constraints_json), null, 2) : "No constraints"}</pre>
             </div>
             <div className="actions">
-              <button onClick={addFirstJournalist} disabled={!list || journalists.length === 0}>Add first journalist</button>
-              <button className="secondary" onClick={approveList} disabled={!list}>Approve list</button>
+              <button onClick={addFirstJournalist} disabled={busy || !list || journalists.length === 0}>Add first journalist</button>
+              <button className="secondary" onClick={approveList} disabled={busy || !list}>Approve list</button>
               {list && <a className="button-link" href={exportUrl(client.id, list.id, "media-list.csv")}>Media CSV</a>}
               {list && <a className="button-link" href={exportUrl(client.id, list.id, "brief.md")}>Brief MD</a>}
               <a className="button-link" href={clientExportUrl(client.id, "source-audit.md")}>Source audit</a>
@@ -142,10 +163,10 @@ export function CampaignScreen({ activeClient }: Props) {
             <tbody>
               {list.contacts.map((contact) => (
                 <tr className={selectedContact?.id === contact.id ? "selected" : ""} key={contact.id} onClick={() => setSelectedContact(contact)}>
-                  <td>{contact.journalist?.display_name ?? contact.outlet?.name ?? "Unnamed"}</td>
-                  <td>{contact.target_score ?? "—"}</td>
-                  <td>{contact.approval_state}</td>
-                  <td>{contact.exclusion_flag ? "yes" : "no"}</td>
+                  <td data-label="Target">{contact.journalist?.display_name ?? contact.outlet?.name ?? "Unnamed"}</td>
+                  <td data-label="Score">{contact.target_score ?? "Not set"}</td>
+                  <td data-label="Approval">{contact.approval_state}</td>
+                  <td data-label="Excluded">{contact.exclusion_flag ? "yes" : "no"}</td>
                 </tr>
               ))}
             </tbody>
@@ -167,12 +188,12 @@ export function CampaignScreen({ activeClient }: Props) {
               </select>
             </label>
             <label>Narrative angle<textarea value={narrativeAngle(selectedContact)} onChange={(event) => setSelectedContact({ ...selectedContact, narrative_fit_json: narrativeJson(event.target.value) })} /></label>
-            <button onClick={() => saveContact({
+            <button disabled={busy} onClick={() => saveContact({
               target_rationale: selectedContact.target_rationale,
               pitch_angle: selectedContact.pitch_angle,
               approval_state: selectedContact.approval_state,
               narrative_fit_json: selectedContact.narrative_fit_json
-            })}>Save overlay</button>
+            })}>{busy ? "Saving overlay" : "Save overlay"}</button>
             <p className="guardrail">These fields are client/campaign overlay data and never write to global journalist records.</p>
           </div>
         ) : <p className="muted">Select or add a campaign contact.</p>}

@@ -27,7 +27,10 @@ export function DirectoryScreen({ resource, records, selected, query, onQuery, o
             <p className="eyebrow">Global media graph</p>
             <h2>{resource}</h2>
           </div>
-          <input value={query} onChange={(event) => onQuery(event.target.value)} placeholder={`Search ${resource}`} />
+          <label className="search-field">
+            <span>Search</span>
+            <input value={query} onChange={(event) => onQuery(event.target.value)} placeholder={`Find ${resource}`} />
+          </label>
         </div>
         <RecordTable records={records} columns={columnsByResource[resource]} selectedId={selected?.id} onSelect={onSelect} />
       </div>
@@ -35,4 +38,3 @@ export function DirectoryScreen({ resource, records, selected, query, onQuery, o
     </section>
   );
 }
-
