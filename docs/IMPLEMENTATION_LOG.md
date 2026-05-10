@@ -2061,3 +2061,55 @@ Started branch `phase-4-tabulator-offline-dry-run`. Determined the first safe sl
 ### Next Recommended Action
 
 - Commit, tag `phase-4-tabulator-offline-dry-run-complete`, and push branch/tag.
+
+---
+
+## 2026-05-10T14:55:26-07:00 — Project Calibration Handoff
+
+### Action
+
+- Created a BroadLister project-state checkpoint and agent coordination handoff after the completed Tabulator offline dry-run slice.
+- Briefed Hermes General/default for coordination review.
+- No runtime feature implementation was performed.
+
+### Files Changed
+
+- `docs/BROADLISTER_PROJECT_STATUS_CHECKPOINT.md`
+- `docs/BROADLISTER_AGENT_COORDINATION_PLAN.md`
+- `docs/BROADLISTER_NEXT_SESSION_BOOTSTRAP_PROMPT.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `git switch -c phase-4-project-calibration-handoff`: exit 0
+- `hermes -z "<BroadLister coordination checkpoint review...>"`: exit 0
+- `pnpm build`: exit 0
+- `pnpm verify`: exit 0
+
+### Tests Run
+
+- Build: pass.
+- Verify: pass.
+- API tests: 13 files, 67 tests passed.
+- Web unit tests: 2 files, 9 tests passed.
+
+### Hermes / Sevenfold
+
+- Hermes General/default reviewed the current state and returned proceed guidance.
+- Hermes finding: current BroadLister development order is aligned with ProjectReckoner and Sevenfold mission.
+- Hermes finding: next implementation should be Tabulator-side offline `validate`/`dry_run` in `/home/bxby/development/reckoner-app/tabulator`; no broader planning pause is needed.
+- Hermes finding: create a dedicated BroadLister Hermes profile later, after real Sevenfold day-to-day or pilot-campaign use begins.
+- Hermes did not consult live reckoner-dev or sevenfold profiles in that CLI turn. It used repo docs, prior review records, and Tabulator/ProjectReckoner inspection.
+
+### Blockers / Stopping Conditions
+
+- None. This pass is documentation and coordination only.
+
+### Rollback Notes
+
+- Revert the forthcoming docs commit. No schema, runtime behavior, external write, Tabulator repo change, Bucketer repo change, Hermes config change, or sevenfold profile change was introduced.
+
+### Next Recommended Action
+
+- Run `pnpm build` and `pnpm verify`.
+- Commit, tag `phase-4-project-calibration-handoff-complete`, and push branch/tag if verification passes.
