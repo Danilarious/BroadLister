@@ -77,11 +77,12 @@ export function ImportScreen({ onImported, onOpenReview }: Props) {
     try {
       const result = await ingestUrl({ url, html: html.trim() || undefined });
       setLastUrlResult(result);
+      setLastBatchId(result.import_batch?.id);
       setStatus({
         kind: result.summary.fetch_error ? "info" : "success",
         message: `Created ${result.review_items.length} review proposals for "${result.summary.article_title}".`
       });
-      onImported();
+      onImported(result.import_batch?.id);
     } catch (error) {
       setStatus({ kind: "error", message: readableError(error) });
     } finally {

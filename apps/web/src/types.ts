@@ -15,6 +15,30 @@ export type ReviewItem = ApiRecord & {
   decision_note?: string;
 };
 
+export type ReviewMatch = {
+  model: string;
+  id: string;
+  label: string;
+  confidence: "low" | "medium" | "high";
+  reason: string;
+};
+
+export type ReviewDependency = {
+  model: string;
+  status: "resolved" | "missing";
+  label: string;
+  id?: string;
+  reason: string;
+};
+
+export type ReviewContext = {
+  summary: string;
+  matches: ReviewMatch[];
+  dependencies: ReviewDependency[];
+  recommended_action: "create_new" | "match_existing" | "resolve_dependencies" | "advisory_apply" | "reject_or_defer";
+  proposal: Record<string, unknown>;
+};
+
 export type ImportBatch = ApiRecord & {
   label: string;
   source_type: string;
@@ -40,6 +64,7 @@ export type UrlIngestSummary = {
 };
 
 export type UrlIngestResult = {
+  import_batch?: ImportBatch;
   review_items: ReviewItem[];
   summary: UrlIngestSummary;
 };

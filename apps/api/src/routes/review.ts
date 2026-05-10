@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { prisma } from "../db/prisma.js";
-import { applyReviewItem } from "../services/review.js";
+import { applyReviewItem, getReviewContext } from "../services/review.js";
 
 const idParams = z.object({ id: z.string().min(1) });
 const decisionBody = z.object({ decided_by: z.string().optional(), decision_note: z.string().optional() });
@@ -22,6 +22,15 @@ export async function registerReviewRoutes(app: FastifyInstance): Promise<void> 
       },
       orderBy: { created_at: "asc" }
     });
+  });
+
+  app.get("/review/:id/context", async (request, reply) => {
+    const { id } = idParams.parse(request.params);
+    try {
+      return await getReviewContext(id);
+    } catch (error) {
+      return reply.code(404).send({ error: (error as Error).message });
+    }
   });
 
   app.post("/review/:id/approve", async (request, reply) => {
@@ -51,5 +60,22 @@ export async function registerReviewRoutes(app: FastifyInstance): Promise<void> 
       return reply.code(404).send({ error: "not_found" });
     }
   });
-}
 
+  app.post("/review/:id/defer", async (request, reply) => {
+    const { id } = idParams.parse(request.params);
+    const body = decisionBody.parse(request.body ?? {});
+    try {
+      return await prisma.reviewItem.update({
+        where: { id },
+        data: {
+          status: "deferred",
+          decided_at: new Date(),
+          decided_by: body.decided_by ?? "operator",
+          decision_note: body.decision_note ?? "Deferred in the BroadLister UI"
+        }
+      });
+    } catch {
+      return reply.code(404).send({ error: "not_found" });
+    }
+  });
+}

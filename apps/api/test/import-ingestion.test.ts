@@ -106,6 +106,8 @@ describe("import ingestion workflows", () => {
     expect(response.statusCode).toBe(201);
     const body = response.json();
     const kinds = body.review_items.map((item: { kind: string }) => item.kind);
+    expect(body.import_batch).toMatchObject({ source_type: "pasted_html", row_count: 1 });
+    expect(body.review_items.every((item: { source_import_batch_id: string }) => item.source_import_batch_id === body.import_batch.id)).toBe(true);
     expect(kinds).toEqual(expect.arrayContaining([
       "outlet_candidate",
       "article_candidate",

@@ -1,4 +1,4 @@
-import type { ApiRecord, CampaignWorkspace, CsvPreview, ImportBatch, ResourceName, ReviewItem, UrlIngestResult } from "./types.js";
+import type { ApiRecord, CampaignWorkspace, CsvPreview, ImportBatch, ResourceName, ReviewContext, ReviewItem, UrlIngestResult } from "./types.js";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`/api${path}`, {
@@ -18,16 +18,28 @@ export function listResource(resource: ResourceName, query = ""): Promise<ApiRec
   return request<ApiRecord[]>(`/${resource}?${params.toString()}`);
 }
 
-export function listReviews(status = "pending", importBatchId?: string): Promise<ReviewItem[]> {
+export function listReviews(status = "pending", importBatchId?: string, kind?: string): Promise<ReviewItem[]> {
   const params = new URLSearchParams({ status });
   if (importBatchId) params.set("source_import_batch_id", importBatchId);
+  if (kind) params.set("kind", kind);
   return request<ReviewItem[]>(`/review?${params.toString()}`);
+}
+
+export function getReviewContext(id: string): Promise<ReviewContext> {
+  return request<ReviewContext>(`/review/${id}/context`);
 }
 
 export function approveReview(id: string): Promise<ApiRecord> {
   return request<ApiRecord>(`/review/${id}/approve`, {
     method: "POST",
     body: JSON.stringify({ decided_by: "operator" })
+  });
+}
+
+export function deferReview(id: string, decision_note?: string): Promise<ReviewItem> {
+  return request<ReviewItem>(`/review/${id}/defer`, {
+    method: "POST",
+    body: JSON.stringify({ decided_by: "operator", decision_note })
   });
 }
 

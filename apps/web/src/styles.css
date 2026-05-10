@@ -210,6 +210,12 @@ pre {
   max-width: 1480px;
 }
 
+.notice.compact {
+  box-shadow: none;
+  margin: 0;
+  padding: var(--space-3);
+}
+
 .error {
   background: oklch(94% 0.035 28);
   border-color: oklch(72% 0.065 28);
@@ -422,11 +428,26 @@ pre {
   gap: var(--space-2);
 }
 
+.review-toolbar {
+  box-shadow: none;
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.review-toolbar h2 {
+  margin: 0;
+}
+
+.review-toolbar p {
+  margin: var(--space-1) 0 0;
+}
+
 .review-card {
   align-items: start;
   border-radius: var(--radius-md);
   display: grid;
-  gap: var(--space-1);
+  gap: var(--space-2);
   justify-items: start;
   text-align: left;
   width: 100%;
@@ -439,6 +460,117 @@ pre {
 
 .review-card small {
   opacity: 0.72;
+}
+
+.review-card.selected .badge {
+  background: oklch(95% 0.022 82);
+  color: var(--accent);
+}
+
+.review-detail-stack {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.review-summary {
+  background: oklch(95% 0.018 82);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+
+.review-summary h4,
+.reconciliation-panel h4 {
+  margin: 0;
+}
+
+.review-summary p {
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.entity-summary {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.entity-summary div,
+.match-row,
+.dependency-row {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+}
+
+.entity-summary dt {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.entity-summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.reconciliation-panel {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.match-row,
+.dependency-row {
+  background: var(--surface);
+}
+
+.match-row span,
+.dependency-row span,
+.match-row small,
+.dependency-row small {
+  color: var(--muted);
+}
+
+.dependency-row {
+  align-items: start;
+  grid-template-columns: auto 1fr;
+}
+
+.status-dot {
+  background: var(--danger);
+  border-radius: 999px;
+  display: inline-block;
+  height: 10px;
+  margin-top: 0.4rem;
+  width: 10px;
+}
+
+.dependency-row.resolved .status-dot {
+  background: var(--success);
+}
+
+.error-inline,
+.danger-action {
+  color: var(--danger);
+}
+
+details {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 800;
 }
 
 .empty {

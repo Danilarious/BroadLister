@@ -71,6 +71,7 @@ test("import and review screens expose labeled operator controls", async ({ page
   await page.getByRole("button", { name: "Review Queue" }).click();
   await expect(page.getByRole("heading", { name: "Review detail" })).toBeVisible();
   await expect(page.getByText(/Imports never write directly to global records|Select a review item/)).toBeVisible();
+  await expect(page.getByLabel("Proposal kind")).toBeVisible();
 });
 
 test("mobile import flow creates visible article proposals", async ({ page }) => {
@@ -98,7 +99,11 @@ test("mobile import flow creates visible article proposals", async ({ page }) =>
   await expect(page.getByText("Outlet: CoinDesk")).toBeVisible();
   await page.getByRole("button", { name: "Open Review Queue" }).click();
   await expect(page.getByRole("heading", { name: "Review detail" })).toBeVisible();
-  await expect(page.locator("main")).toContainText(/article_candidate|outlet_candidate|journalist_candidate/);
+  await expect(page.locator("main")).toContainText(/Article|Outlet|Journalist/);
+  await expect(page.locator("main")).toContainText(/Likely matches|Dependencies/);
+  await expect(page.getByRole("button", { name: "Approve or match" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Defer" })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
 });
 
 async function expectNoHorizontalOverflow(page: import("@playwright/test").Page) {

@@ -52,6 +52,20 @@ export async function registerUrlIngestRoutes(app: FastifyInstance): Promise<voi
 
     const proposal = proposeFromHtml(body.url, html);
     const citation = await prisma.citation.create({ data: proposal.citation });
+    const batch = await prisma.importBatch.create({
+      data: {
+        source_type: body.html ? "pasted_html" : "article_url",
+        label: proposal.article.title ? `Article ingest: ${proposal.article.title}` : `Article ingest: ${body.url}`,
+        row_count: 1,
+        notes: JSON.stringify({
+          source_url: body.url,
+          fetch_error,
+          extraction_source: proposal.extraction.source,
+          proposed_items: 0
+        }),
+        finished_at: new Date()
+      }
+    });
     const outlet = await prisma.outlet.findFirst({ where: { home_url_host: proposal.outlet.home_url_host } });
 
     const reviewItems = [];
@@ -59,6 +73,7 @@ export async function registerUrlIngestRoutes(app: FastifyInstance): Promise<voi
       reviewItems.push(await prisma.reviewItem.create({
         data: {
           kind: "outlet_candidate",
+          source_import_batch_id: batch.id,
           source_citation_id: citation.id,
           proposal_payload_json: JSON.stringify({
             action: "create",
@@ -79,6 +94,7 @@ export async function registerUrlIngestRoutes(app: FastifyInstance): Promise<voi
       reviewItems.push(await prisma.reviewItem.create({
         data: {
           kind: "article_candidate",
+          source_import_batch_id: batch.id,
           source_citation_id: citation.id,
           proposal_payload_json: JSON.stringify({
             action: "create",
@@ -94,11 +110,24 @@ export async function registerUrlIngestRoutes(app: FastifyInstance): Promise<voi
       reviewItems.push(await prisma.reviewItem.create({
         data: {
           kind: "article_candidate",
+          source_import_batch_id: batch.id,
           source_citation_id: citation.id,
           proposal_payload_json: JSON.stringify({
             action: "create_after_outlet_review",
             model: "article",
-            data: proposal.article,
+            data: {
+              ...proposal.article,
+              outlet_name: proposal.outlet.name,
+              outlet_slug: proposal.outlet.slug,
+              outlet_home_url_host: proposal.outlet.home_url_host,
+              outlet: {
+                name: proposal.outlet.name,
+                name_norm: normalizeText(proposal.outlet.name),
+                slug: proposal.outlet.slug,
+                outlet_type: "other",
+                home_url_host: proposal.outlet.home_url_host
+              }
+            },
             blocked_reason: "Outlet must be approved before article can be applied."
           })
         }
@@ -109,6 +138,7 @@ export async function registerUrlIngestRoutes(app: FastifyInstance): Promise<voi
       reviewItems.push(await prisma.reviewItem.create({
         data: {
           kind: "journalist_candidate",
+          source_import_batch_id: batch.id,
           source_citation_id: citation.id,
           proposal_payload_json: JSON.stringify({
             action: "create",
@@ -124,6 +154,7 @@ export async function registerUrlIngestRoutes(app: FastifyInstance): Promise<voi
       reviewItems.push(await prisma.reviewItem.create({
         data: {
           kind: "byline_candidate",
+          source_import_batch_id: batch.id,
           source_citation_id: citation.id,
           proposal_payload_json: JSON.stringify({
             action: "create_after_article_and_journalist_review",
@@ -140,16 +171,18 @@ export async function registerUrlIngestRoutes(app: FastifyInstance): Promise<voi
     }
 
     for (const tag of proposal.tags) {
+      const tagSlug = tag.slug || `${tag.kind}:${slugify(tag.name)}`;
       reviewItems.push(await prisma.reviewItem.create({
         data: {
           kind: "tag_candidate",
+          source_import_batch_id: batch.id,
           source_citation_id: citation.id,
           proposal_payload_json: JSON.stringify({
             action: "create",
             model: "tag",
             data: {
               name: tag.name,
-              slug: tag.slug || `${tag.kind}:${slugify(tag.name)}`,
+              slug: tagSlug,
               kind: tag.kind,
               description: tag.reason
             }
@@ -159,13 +192,14 @@ export async function registerUrlIngestRoutes(app: FastifyInstance): Promise<voi
       reviewItems.push(await prisma.reviewItem.create({
         data: {
           kind: "article_tag_candidate",
+          source_import_batch_id: batch.id,
           source_citation_id: citation.id,
           proposal_payload_json: JSON.stringify({
             action: "advisory",
             model: "articleTag",
             data: {
               article_url_canonical: proposal.article.url_canonical,
-              tag_slug: tag.slug,
+              tag_slug: tagSlug,
               confidence: tag.confidence,
               reason: tag.reason
             },
@@ -179,6 +213,7 @@ export async function registerUrlIngestRoutes(app: FastifyInstance): Promise<voi
       reviewItems.push(await prisma.reviewItem.create({
         data: {
           kind: "client_relevance_candidate",
+          source_import_batch_id: batch.id,
           source_citation_id: citation.id,
           proposal_payload_json: JSON.stringify({
             action: "advisory",
@@ -193,7 +228,20 @@ export async function registerUrlIngestRoutes(app: FastifyInstance): Promise<voi
       }));
     }
 
+    const completedBatch = await prisma.importBatch.update({
+      where: { id: batch.id },
+      data: {
+        notes: JSON.stringify({
+          source_url: body.url,
+          fetch_error,
+          extraction_source: proposal.extraction.source,
+          proposed_items: reviewItems.length
+        })
+      }
+    });
+
     return reply.code(201).send({
+      import_batch: completedBatch,
       citation,
       review_items: reviewItems,
       summary: {

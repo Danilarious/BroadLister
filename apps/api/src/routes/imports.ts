@@ -171,6 +171,7 @@ export async function registerImportRoutes(app: FastifyInstance): Promise<void> 
               model: "contactMethod",
               data: {
                 subject_type: "journalist",
+                journalist_display_name: mapped.display_name,
                 kind: "email",
                 value: mapped.email,
                 verification_state: "unverified",

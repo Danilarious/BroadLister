@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { approveReview, createResource, listResource, listReviews, rejectReview } from "./api.js";
+import { approveReview, createResource, deferReview, listResource, listReviews, rejectReview } from "./api.js";
 import { ReviewQueue } from "./components/ReviewQueue.js";
 import { CampaignScreen } from "./screens/CampaignScreen.js";
 import { DirectoryScreen } from "./screens/DirectoryScreen.js";
@@ -34,11 +34,12 @@ export function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isBusy, setIsBusy] = useState(false);
   const [importBatchId, setImportBatchId] = useState<string>();
+  const [reviewKind, setReviewKind] = useState("");
 
   const activeClient = clients.find((client) => client.id === activeClientId);
 
-  async function refreshReviews(batchId = importBatchId) {
-    const next = await listReviews("pending", batchId);
+  async function refreshReviews(batchId = importBatchId, kind = reviewKind) {
+    const next = await listReviews("pending", batchId, kind || undefined);
     setReviews(next);
     setSelectedReview(next[0]);
   }
@@ -69,6 +70,7 @@ export function App() {
       if (screen !== "review" || !selectedReview) return;
       if (event.key === "a") void approve(selectedReview);
       if (event.key === "r") void reject(selectedReview);
+      if (event.key === "d") void defer(selectedReview);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -79,6 +81,9 @@ export function App() {
     try {
       await approveReview(item.id);
       await refreshReviews();
+      setError(undefined);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Approval failed.");
     } finally {
       setIsBusy(false);
     }
@@ -89,6 +94,22 @@ export function App() {
     try {
       await rejectReview(item.id, "Rejected in the BroadLister UI");
       await refreshReviews();
+      setError(undefined);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Reject failed.");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function defer(item: ReviewItem) {
+    setIsBusy(true);
+    try {
+      await deferReview(item.id, "Deferred for operator reconciliation");
+      await refreshReviews();
+      setError(undefined);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Defer failed.");
     } finally {
       setIsBusy(false);
     }
@@ -176,16 +197,36 @@ export function App() {
       )}
 
       {screen === "review" && (
-        <ReviewQueue reviews={reviews} selected={selectedReview} onSelect={setSelectedReview} onApprove={approve} onReject={reject} />
+        <ReviewQueue
+          reviews={reviews}
+          selected={selectedReview}
+          selectedBatchId={importBatchId}
+          kindFilter={reviewKind}
+          isBusy={isBusy}
+          onKindFilter={(kind) => {
+            setReviewKind(kind);
+            refreshReviews(importBatchId, kind).catch((caught: Error) => setError(caught.message));
+          }}
+          onClearBatch={() => {
+            setImportBatchId(undefined);
+            refreshReviews(undefined, reviewKind).catch((caught: Error) => setError(caught.message));
+          }}
+          onSelect={setSelectedReview}
+          onApprove={approve}
+          onReject={reject}
+          onDefer={defer}
+        />
       )}
 
       {screen === "imports" && (
         <ImportScreen onImported={(batchId) => {
           setImportBatchId(batchId);
-          refreshReviews(batchId).catch((caught: Error) => setError(caught.message));
+          setReviewKind("");
+          refreshReviews(batchId, "").catch((caught: Error) => setError(caught.message));
         }} onOpenReview={(batchId) => {
           setImportBatchId(batchId);
-          refreshReviews(batchId).then(() => setScreen("review")).catch((caught: Error) => setError(caught.message));
+          setReviewKind("");
+          refreshReviews(batchId, "").then(() => setScreen("review")).catch((caught: Error) => setError(caught.message));
         }} />
       )}
 

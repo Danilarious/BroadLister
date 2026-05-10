@@ -1119,3 +1119,76 @@ Started branch `phase-4-import-ingestion` from `phase-3-hardening-browser-comple
 ### Next Recommended Action
 
 - Commit, tag, and push this phase. Next development should continue with import reconciliation polish or ontology/Tabulator alignment planning, not runtime integration.
+
+---
+
+## 2026-05-09T20:42:11-07:00 — Import Reconciliation And Review Approval
+
+### Action
+
+Started branch `phase-4-reconciliation-review` from `phase-4-import-ingestion-complete`. Implemented deterministic reconciliation context, match-or-create approval behavior, linked approval resolution for article/byline/article-tag/client relevance proposals, review item defer action, URL import batch tracking, and a clearer Review Queue UI with proposal summaries, match warnings, dependency status, batch filter, kind filter, and mobile-safe controls.
+
+### Files Changed
+
+- `apps/api/src/routes/imports.ts`
+- `apps/api/src/routes/review.ts`
+- `apps/api/src/routes/url-ingest.ts`
+- `apps/api/src/services/review.ts`
+- `apps/api/test/import-ingestion.test.ts`
+- `apps/api/test/reconciliation-review.test.ts`
+- `apps/web/src/App.tsx`
+- `apps/web/src/api.ts`
+- `apps/web/src/components/ReviewQueue.tsx`
+- `apps/web/src/screens/ImportScreen.tsx`
+- `apps/web/src/styles.css`
+- `apps/web/src/types.ts`
+- `e2e/broadlister-smoke.spec.ts`
+- `docs/BROADLISTER_IMPORT_INGESTION_CONTRACT.md`
+- `docs/BROADLISTER_OPERATOR_RUNBOOK.md`
+- `docs/BROADLISTER_NEXT_DEVELOPMENT_PLAN.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `node /home/bxby/.codex/skills/impeccable/scripts/load-context.mjs`: exit 0
+- `pnpm --filter @broadlister/api typecheck && pnpm --filter @broadlister/web typecheck`: exit 2, fixed Prisma create input types
+- `pnpm --filter @broadlister/api typecheck && pnpm --filter @broadlister/web typecheck`: exit 0
+- `pnpm --filter @broadlister/api test -- reconciliation-review.test.ts`: exit 0; vitest ran all API tests
+- `pnpm verify`: exit 0
+- `pnpm check:global-models && pnpm check:denylist && pnpm build`: exit 0
+- `pnpm test:e2e`: exit 0
+- `pnpm test:mobile`: exit 0
+- `pnpm screenshots`: exit 0
+- `pnpm verify:full`: exit 0
+- `pnpm backup:db`: exit 0; wrote `data/backups/broadlister-2026-05-10T03-43-56-903Z.sqlite`
+
+### Tests Run
+
+- API tests: 8 files, 27 tests passed.
+- Web tests: 1 file, 3 tests passed.
+- Playwright E2E: 8 tests passed across desktop and mobile Chromium.
+- Mobile-only Playwright: 4 tests passed.
+- Screenshot-marked Playwright tests: 4 tests passed.
+- New reconciliation tests cover duplicate matching, linked approval resolution, contact method defaults, reject/defer non-mutation, import batch grouping, and review filter by batch/kind.
+- Cross-client leakage integration test: pass.
+- Global model scope guard: pass.
+- Dependency deny-list guard: pass.
+- Build: pass.
+
+### Hermes / Sevenfold
+
+- No Hermes or sevenfold review gate triggered. This pass did not alter campaign workspace shape, export folder conventions, architecture stack, ports, integrations, or runtime coupling boundaries.
+
+### Blockers / Stopping Conditions
+
+- None so far. No outbound messaging path, credential dependency, destructive migration, systemd change, or runtime coupling introduced.
+
+### Rollback Notes
+
+- Revert the forthcoming branch commit to remove this reconciliation/review-approval pass.
+- No migration was added.
+- Restore from the latest `data/backups/` snapshot if operator test imports should be reset.
+
+### Next Recommended Action
+
+- Commit, tag, and push `phase-4-reconciliation-review-complete`, then stop at the phase boundary for Bo review.

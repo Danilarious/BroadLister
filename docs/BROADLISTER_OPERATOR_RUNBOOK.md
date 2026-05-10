@@ -64,6 +64,30 @@ pnpm backup:db
 
 Use `pnpm verify` before committing changes. Use `pnpm backup:db` before migrations, import experiments, or broad data edits.
 
+## Import Review Workflow
+
+1. Open `Imports`.
+2. Preview CSV rows or submit an article URL/pasted HTML snapshot.
+3. Use `Open Review Queue` after import. The queue opens filtered to that import batch when a batch id exists.
+4. Inspect the proposal summary, likely matches, and dependencies.
+5. Approve or match only when the proposed action is clear.
+6. Defer ambiguous or dependency-blocked proposals.
+7. Reject bad extraction or irrelevant records.
+
+Review shortcuts:
+
+- `a`: approve or match selected proposal.
+- `d`: defer selected proposal.
+- `r`: reject selected proposal.
+
+Safety behavior:
+
+- Imports create review items first, not canonical records.
+- Approval uses deterministic matching before creating records.
+- Contact methods default to `verification_state=unverified` and `lawful_to_store=false`.
+- Client relevance applies only as client-scoped notes.
+- BroadLister still does not send outreach or sync Gmail.
+
 ## Access From Mac
 
 Safest default access is an SSH tunnel from the Mac to the ThinkPad:

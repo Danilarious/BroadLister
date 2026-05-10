@@ -33,6 +33,18 @@ Contact method candidates carry `verification_state: "unverified"` and `lawful_t
 
 XLSX is deferred. Reason: CSV covers the immediate workflow without adding binary parsing risk. Add XLSX later behind the same preview/commit contract if operators need spreadsheet-native intake.
 
+## Import Batches
+
+Every committed CSV import creates an `ImportBatch`; article ingestion now creates an `ImportBatch` as well.
+
+Source types:
+
+- `csv` for CSV contact imports.
+- `article_url` for server-fetched article pages.
+- `pasted_html` for operator-provided article HTML snapshots.
+
+Review queue filters can scope pending proposals by `source_import_batch_id` and proposal `kind`. This is the operator's main recovery path after a large import or an article extraction with many linked proposals.
+
 ## Article URL Ingestion
 
 Input:
@@ -77,6 +89,39 @@ Review item kinds:
 - `client_relevance_candidate`
 
 Byline, article-tag, and client-relevance proposals are advisory until required linked records exist and an operator applies them in the proper scope.
+
+## Reconciliation And Approval Lifecycle
+
+Review items stay pending until an operator approves, rejects, or defers them.
+
+Deterministic matching rules:
+
+- Outlet: `home_url_host`, then normalized outlet name.
+- Article: canonical URL.
+- Journalist: normalized display name.
+- Contact method: normalized value hash.
+- Tag: slug, then name.
+- Byline: approved article plus approved journalist.
+- Article tag: approved article plus approved tag.
+- Client relevance: client slug plus approved article.
+
+Approval behavior:
+
+- If a likely existing global record is found, approval returns that record instead of creating a duplicate.
+- Article approval can resolve an outlet by included `outlet_id`, domain, or normalized outlet name.
+- Contact method approval requires a resolvable journalist for journalist-scoped contacts.
+- Byline approval requires an existing or previously approved article and journalist.
+- Article-tag approval requires an existing or previously approved article and tag.
+- Client-relevance approval creates a `ClientNote` scoped to the matched client. It does not write global client strategy fields.
+- Reject and defer change only the review item status. They do not mutate global records.
+
+Operator actions:
+
+- Approve or match: apply deterministic reconciliation through the review service.
+- Defer: mark unresolved or ambiguous work for later without mutation.
+- Reject: discard the proposal without mutation.
+
+Manual field-level merge/update remains deferred. Current behavior is deliberately conservative: deterministic match-or-create only, with explicit dependency errors when linked records cannot be resolved.
 
 ## Trace Finance Relevance Rules
 
