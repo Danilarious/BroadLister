@@ -46,7 +46,7 @@ describe("API hardening", () => {
     });
   });
 
-  it("requires operator-provided URL snapshots and never fetches live pages", async () => {
+  it("fails live URL ingestion with a useful pasted-HTML recovery path when fetch is blocked", async () => {
     const app = await buildApp();
     const response = await app.inject({
       method: "POST",
@@ -56,7 +56,8 @@ describe("API hardening", () => {
     await app.close();
 
     expect(response.statusCode).toBe(400);
-    expect(response.json()).toMatchObject({ error: "html_required" });
+    expect(response.json()).toMatchObject({ error: "html_unavailable" });
+    expect(response.json().message).toContain("Paste HTML manually");
   });
 
   it("scopes approval logs to the requested client", async () => {

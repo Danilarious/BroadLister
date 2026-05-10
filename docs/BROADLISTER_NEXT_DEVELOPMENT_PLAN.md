@@ -4,7 +4,7 @@
 
 Next phase should be `A) ontology-core / Tabulator alignment planning`.
 
-The browser-validation and hardening pass added Playwright coverage, expanded API hardening tests, documented Tailscale access, and preserved the no-outreach and cross-client safety posture. No additional hardening block is currently severe enough to defer ontology planning.
+The browser-validation and hardening pass added Playwright coverage, expanded API hardening tests, documented Tailscale access, and preserved the no-outreach and cross-client safety posture. The import-ingestion pass added deterministic, review-gated URL article ingestion and CSV contact imports. No additional hardening block is currently severe enough to defer ontology planning.
 
 This remains planning-first alignment for ontology and tagging interoperability. It should not hard-couple BroadLister to ProjectReckoner, Tabulator, TaskReckoner, Bucketer, Hermes, or sevenfold at runtime.
 
@@ -36,6 +36,7 @@ Design a safe bridge between BroadLister's media ontology and the broader Sevenf
 - No live ProjectReckoner service dependency.
 - No automatic tag rewriting.
 - No LLM classification in ingestion.
+- No LLM classification in ingestion until it is proposal-only, operator-triggered, and explicitly approved.
 - No large-scale scraping.
 - No social-graph inference.
 - No sentiment analysis.

@@ -1,4 +1,4 @@
-import type { ApiRecord, CampaignWorkspace, ImportBatch, ResourceName, ReviewItem } from "./types.js";
+import type { ApiRecord, CampaignWorkspace, CsvPreview, ImportBatch, ResourceName, ReviewItem, UrlIngestResult } from "./types.js";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`/api${path}`, {
@@ -45,8 +45,15 @@ export function importCsv(payload: { label: string; csv: string; mapping: Record
   });
 }
 
-export function ingestUrl(payload: { url: string; html: string }): Promise<{ review_items: ReviewItem[] }> {
-  return request<{ review_items: ReviewItem[] }>("/imports/url", {
+export function previewCsv(payload: { label: string; csv: string; mapping?: Record<string, string> }): Promise<CsvPreview> {
+  return request<CsvPreview>("/imports/csv/preview", {
+    method: "POST",
+    body: JSON.stringify({ ...payload, mapping: payload.mapping ?? {} })
+  });
+}
+
+export function ingestUrl(payload: { url: string; html?: string }): Promise<UrlIngestResult> {
+  return request<UrlIngestResult>("/imports/url", {
     method: "POST",
     body: JSON.stringify(payload)
   });

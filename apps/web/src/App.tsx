@@ -182,6 +182,9 @@ export function App() {
       {screen === "imports" && (
         <ImportScreen onImported={(batchId) => {
           setImportBatchId(batchId);
+          refreshReviews(batchId).catch((caught: Error) => setError(caught.message));
+        }} onOpenReview={(batchId) => {
+          setImportBatchId(batchId);
           refreshReviews(batchId).then(() => setScreen("review")).catch((caught: Error) => setError(caught.message));
         }} />
       )}

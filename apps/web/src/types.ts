@@ -22,6 +22,28 @@ export type ImportBatch = ApiRecord & {
   row_count: number;
 };
 
+export type CsvPreview = {
+  row_count: number;
+  columns: string[];
+  detected_mapping: Record<string, string>;
+  sample: Array<{ raw: Record<string, string>; mapped: Record<string, string> }>;
+};
+
+export type UrlIngestSummary = {
+  fetch_error?: string;
+  extraction_source: string;
+  article_title: string;
+  outlet_name: string;
+  authors: string[];
+  tags: string[];
+  client_relevance?: string;
+};
+
+export type UrlIngestResult = {
+  review_items: ReviewItem[];
+  summary: UrlIngestSummary;
+};
+
 export type Client = ApiRecord & {
   slug: string;
   display_name: string;

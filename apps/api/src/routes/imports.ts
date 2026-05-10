@@ -10,13 +10,94 @@ const csvBody = z.object({
   mapping: z.record(z.string()).default({})
 });
 
-const supportedMappings = new Set(["display_name", "outlet_name", "email", "tag"]);
+const supportedMappings = new Set([
+  "display_name",
+  "outlet_name",
+  "role_title",
+  "email",
+  "tag",
+  "location_region",
+  "profile_url",
+  "notes"
+]);
+
+const fieldAliases: Record<string, string> = {
+  name: "display_name",
+  "full name": "display_name",
+  journalist: "display_name",
+  author: "display_name",
+  outlet: "outlet_name",
+  publication: "outlet_name",
+  company: "outlet_name",
+  role: "role_title",
+  title: "role_title",
+  "job title": "role_title",
+  email: "email",
+  beat: "tag",
+  topic: "tag",
+  topics: "tag",
+  location: "location_region",
+  region: "location_region",
+  "profile url": "profile_url",
+  linkedin: "profile_url",
+  "x": "profile_url",
+  twitter: "profile_url",
+  notes: "notes"
+};
+
+function parseCsv(csv: string): Record<string, string>[] {
+  return parse(csv, { columns: true, skip_empty_lines: true, trim: true, relax_column_count: true }) as Record<string, string>[];
+}
+
+function detectMapping(columns: string[]): Record<string, string> {
+  return Object.fromEntries(
+    columns
+      .map((column) => [column, fieldAliases[column.trim().toLowerCase()]] as const)
+      .filter((entry): entry is [string, string] => Boolean(entry[1]))
+  );
+}
+
+function mapRow(row: Record<string, string>, mapping: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(mapping)
+      .filter(([column]) => row[column] !== undefined && row[column] !== "")
+      .map(([column, field]) => [field, row[column]])
+  );
+}
 
 export async function registerImportRoutes(app: FastifyInstance): Promise<void> {
+  app.post("/imports/csv/preview", async (request, reply) => {
+    const body = csvBody.parse(request.body);
+    try {
+      const records = parseCsv(body.csv);
+      const columns = records[0] ? Object.keys(records[0]) : [];
+      const mapping = Object.keys(body.mapping).length > 0 ? body.mapping : detectMapping(columns);
+      const unsupported = Object.values(mapping).filter((field) => !supportedMappings.has(field));
+      if (unsupported.length > 0) {
+        return reply.code(400).send({ error: `Unsupported mapped fields: ${unsupported.join(", ")}` });
+      }
+      return {
+        row_count: records.length,
+        columns,
+        detected_mapping: mapping,
+        sample: records.slice(0, 5).map((row) => ({ raw: row, mapped: mapRow(row, mapping) }))
+      };
+    } catch (error) {
+      return reply.code(400).send({ error: "malformed_csv", message: (error as Error).message });
+    }
+  });
+
   app.post("/imports/csv", async (request, reply) => {
     const body = csvBody.parse(request.body);
-    const records = parse(body.csv, { columns: true, skip_empty_lines: true, trim: true }) as Record<string, string>[];
-    const unsupported = Object.values(body.mapping).filter((field) => !supportedMappings.has(field));
+    let records: Record<string, string>[];
+    try {
+      records = parseCsv(body.csv);
+    } catch (error) {
+      return reply.code(400).send({ error: "malformed_csv", message: (error as Error).message });
+    }
+    const columns = records[0] ? Object.keys(records[0]) : [];
+    const mapping = Object.keys(body.mapping).length > 0 ? body.mapping : detectMapping(columns);
+    const unsupported = Object.values(mapping).filter((field) => !supportedMappings.has(field));
     if (unsupported.length > 0) {
       return reply.code(400).send({ error: `Unsupported mapped fields: ${unsupported.join(", ")}` });
     }
@@ -26,11 +107,7 @@ export async function registerImportRoutes(app: FastifyInstance): Promise<void> 
     });
 
     for (const [index, row] of records.entries()) {
-      const mapped = Object.fromEntries(
-        Object.entries(body.mapping)
-          .filter(([column]) => row[column] !== undefined)
-          .map(([column, field]) => [field, row[column]])
-      );
+      const mapped = mapRow(row, mapping);
 
       const batchRow = await prisma.importBatchRow.create({
         data: {
@@ -53,7 +130,9 @@ export async function registerImportRoutes(app: FastifyInstance): Promise<void> 
               data: {
                 display_name: displayName,
                 display_name_norm: normalizeText(displayName),
-                name_variants_json: "[]"
+                name_variants_json: "[]",
+                bio_short: [mapped.role_title, mapped.location_region, mapped.notes].filter(Boolean).join(" | ") || undefined,
+                external_handles_json: mapped.profile_url ? JSON.stringify({ profile_url: mapped.profile_url }) : undefined
               },
               import_batch_row_id: batchRow.id
             })
@@ -81,6 +160,47 @@ export async function registerImportRoutes(app: FastifyInstance): Promise<void> 
           }
         });
       }
+
+      if (mapped.email) {
+        await prisma.reviewItem.create({
+          data: {
+            kind: "contact_method_candidate",
+            source_import_batch_id: batch.id,
+            proposal_payload_json: JSON.stringify({
+              action: "attach_after_journalist_review",
+              model: "contactMethod",
+              data: {
+                subject_type: "journalist",
+                kind: "email",
+                value: mapped.email,
+                verification_state: "unverified",
+                lawful_to_store: false,
+                notes: [mapped.display_name ? `candidate for ${mapped.display_name}` : "", mapped.notes].filter(Boolean).join(" | ") || undefined
+              },
+              import_batch_row_id: batchRow.id
+            })
+          }
+        });
+      }
+
+      if (mapped.tag) {
+        await prisma.reviewItem.create({
+          data: {
+            kind: "tag_candidate",
+            source_import_batch_id: batch.id,
+            proposal_payload_json: JSON.stringify({
+              action: "create",
+              model: "tag",
+              data: {
+                name: mapped.tag,
+                slug: `topic:${slugify(mapped.tag)}`,
+                kind: "topic"
+              },
+              import_batch_row_id: batchRow.id
+            })
+          }
+        });
+      }
     }
 
     return reply.code(201).send(batch);
@@ -91,4 +211,3 @@ export async function registerImportRoutes(app: FastifyInstance): Promise<void> 
     return prisma.importBatchRow.findMany({ where: { batch_id: id }, orderBy: { row_index: "asc" } });
   });
 }
-

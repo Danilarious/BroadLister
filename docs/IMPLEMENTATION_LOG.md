@@ -1044,3 +1044,78 @@ Started branch `phase-3-hardening-browser` from `phase-3-ui-polish-complete`. St
 ### Next Recommended Action
 
 - Run `pnpm verify:full`, back up the DB, commit, tag, push, then proceed only to ontology-core/Tabulator alignment planning if Bo approves.
+
+---
+
+## 2026-05-09T20:22:47-07:00 — Import And Article Ingestion
+
+### Action
+
+Started branch `phase-4-import-ingestion` from `phase-3-hardening-browser-complete`. Implemented a clearer Imports workflow, CSV file selection with preview/commit, deterministic article URL ingestion with optional pasted HTML fallback, review-gated article/outlet/journalist/byline/tag/client-relevance proposals, and bridge/ingestion contract docs. Tested the CoinDesk Trace Finance URL: live fetch returned HTTP 403, and pasted JSON-LD HTML produced review proposals.
+
+### Files Changed
+
+- `apps/api/src/adapters/url/extract.ts`
+- `apps/api/src/routes/imports.ts`
+- `apps/api/src/routes/url-ingest.ts`
+- `apps/api/src/services/review.ts`
+- `apps/api/test/import-ingestion.test.ts`
+- `apps/api/test/hardening.test.ts`
+- `apps/api/test/url-extract.test.ts`
+- `apps/web/src/App.tsx`
+- `apps/web/src/api.ts`
+- `apps/web/src/screens/ImportScreen.tsx`
+- `apps/web/src/styles.css`
+- `apps/web/src/types.ts`
+- `e2e/broadlister-smoke.spec.ts`
+- `docs/BROADLISTER_IMPORT_INGESTION_CONTRACT.md`
+- `docs/BROADLISTER_PROJECTRECKONER_BRIDGE_PLAN.md`
+- `docs/BROADLISTER_NEXT_DEVELOPMENT_PLAN.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `hermes -z ...`: exit 0; returned `PASS WITH CONDITIONS`
+- CoinDesk live URL ingest smoke: exit 0; API returned HTTP 400 `html_unavailable` with HTTP 403 fetch reason
+- CoinDesk pasted JSON-LD ingest smoke: exit 0; API returned HTTP 201 with 15 review proposals
+- `pnpm verify`: exit 0
+- `pnpm check:global-models`: exit 0
+- `pnpm check:denylist`: exit 0
+- `pnpm build`: exit 0
+- `pnpm test:e2e`: exit 0
+- `pnpm test:mobile`: exit 0 when run sequentially
+- `pnpm screenshots`: exit 0 when run sequentially
+- `pnpm verify:full`: exit 0
+- `pnpm backup:db`: exit 0; wrote `data/backups/broadlister-2026-05-10T03-22-47-431Z.sqlite`
+
+### Tests Run
+
+- API tests: 7 files, 22 tests passed.
+- Web tests: 1 file, 3 tests passed.
+- Playwright E2E: 8 tests passed across desktop and mobile Chromium.
+- Mobile-only Playwright: 4 tests passed.
+- Screenshot-marked Playwright tests: 4 tests passed.
+- Cross-client leakage integration test: pass.
+- Global model scope guard: pass.
+- Dependency deny-list guard: pass.
+- Build: pass.
+
+### Hermes / ProjectReckoner Guidance
+
+- Hermes returned `PASS WITH CONDITIONS`.
+- Guidance: BroadLister should own a local deterministic article ingestion adapter now; align with Tabulator/Bucketer by documented contract later; do not import or call Tabulator/Bucketer/ontology-core at runtime; keep LLM assistance out of this implementation or proposal-only later.
+- Conditions preserve standalone local-first operation, review gates, no outreach, no Gmail, no hidden integrations, and no direct ontology mutation.
+
+### Blockers / Stopping Conditions
+
+- None. No runtime coupling, external credentials, public tunnel, destructive migration, outbound communication, or schema change introduced.
+
+### Rollback Notes
+
+- Revert the forthcoming branch commits to remove import-ingestion changes.
+- No migration was added.
+- Restore DB from `data/backups/broadlister-2026-05-10T03-22-47-431Z.sqlite` if test import data should be reset.
+
+### Next Recommended Action
+
+- Commit, tag, and push this phase. Next development should continue with import reconciliation polish or ontology/Tabulator alignment planning, not runtime integration.
