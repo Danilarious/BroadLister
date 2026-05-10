@@ -1461,6 +1461,58 @@ Started branch `phase-4-tabulator-export-tests` from `phase-4-tabulator-export-p
 
 ---
 
+## 2026-05-10T10:24:51-07:00 — Tabulator Export Preview Service
+
+### Action
+
+Started branch `phase-4-tabulator-export-preview` from `phase-4-tabulator-export-tests-complete`. Added a DB-backed, service-only Tabulator export preview that reads approved/provenance-backed public BroadLister media records, maps only allowlisted fields into the existing `BroadListerReviewedMediaExportBundle.v1` helper, and returns an in-memory bundle plus preview metadata/omission reasons. No route, UI, JSON download, file writer, Tabulator API call, network behavior, contact-method export, schema change, or runtime dependency was added.
+
+### Files Changed
+
+- `apps/api/src/services/tabulator-export-preview.ts`
+- `apps/api/test/tabulator-export-preview.test.ts`
+- `docs/BROADLISTER_TABULATOR_BRIDGE_CONTRACT.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `git checkout -b phase-4-tabulator-export-preview`: exit 0
+- `pnpm --filter @broadlister/api typecheck && pnpm --filter @broadlister/api test -- tabulator-export-preview.test.ts`: exit 2; fixed preview service type narrowing
+- `pnpm --filter @broadlister/api typecheck && pnpm --filter @broadlister/api test -- tabulator-export-preview.test.ts`: exit 1; fixed test string assertion and file-write assertion strategy
+- `pnpm --filter @broadlister/api typecheck && pnpm --filter @broadlister/api test -- tabulator-export-preview.test.ts`: exit 0
+- `git diff --check && pnpm verify`: exit 0
+- `pnpm check:global-models && pnpm check:denylist && pnpm build && pnpm --filter @broadlister/api test -- tabulator-export-preview.test.ts && pnpm --filter @broadlister/api test -- cross-client-leakage.test.ts`: exit 1; deterministic preview test was reading concurrent test-created rows from the shared SQLite DB
+- `pnpm --filter @broadlister/api typecheck && pnpm --filter @broadlister/api test -- tabulator-export-preview.test.ts`: exit 0 after adding optional selected article-id scope
+- `pnpm check:global-models && pnpm check:denylist && pnpm build && pnpm --filter @broadlister/api test -- cross-client-leakage.test.ts`: exit 0
+
+### Tests Run
+
+- API targeted suite: 11 files, 55 tests passed.
+- Full `pnpm verify`: API 11 files / 55 tests passed; web 1 file / 3 tests passed; typecheck and lint passed.
+- Global-model guard: pass.
+- Dependency deny-list guard: pass.
+- Build: pass.
+- New preview tests cover reviewed public record inclusion, unapproved omission, missing-provenance omission, client-overlay exclusion, contact-method exclusion, deterministic output, no network calls, no file writer imports, and cross-client isolation in the generic preview.
+- Cross-client leakage integration test: pass in targeted API suite.
+
+### Hermes / Sevenfold
+
+- No review gate triggered. This slice stays within the approved service-only local preview scope and does not add runtime integration, export route shape, Sevenfold export-folder behavior, or outreach behavior.
+
+### Blockers / Stopping Conditions
+
+- None.
+
+### Rollback Notes
+
+- Revert the forthcoming branch commit. No database schema, route, dependency, external integration, or file output changed.
+
+### Next Recommended Action
+
+- Run full verification stack, commit, tag `phase-4-tabulator-export-preview-complete`, push branch/tag, then report that routes/UI/download/Tabulator integration remain deferred.
+
+---
+
 ## 2026-05-09T21:05:15-07:00 — Bridge A Final Verification
 
 ### Action
