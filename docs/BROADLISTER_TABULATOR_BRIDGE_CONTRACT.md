@@ -2,7 +2,7 @@
 
 ## Status
 
-Read-only preview scaffold with operator-confirmed browser JSON download. No export adapter, backend file writer, or Tabulator runtime integration is implemented in this phase.
+Read-only preview scaffold with operator-confirmed browser JSON download is complete. Offline Tabulator import adapter planning is documented in `BROADLISTER_TABULATOR_OFFLINE_IMPORT_PLAN.md`. No export adapter, backend file writer, or Tabulator runtime integration is implemented in BroadLister.
 
 This contract defines the next safe bridge after local ontology snapshot import refinement: reviewed BroadLister media artifacts exported to a local JSON file that Tabulator may later import. BroadLister must not POST to Tabulator, import Tabulator runtime code, or require Tabulator to run.
 
@@ -16,7 +16,10 @@ Current implementation scaffold:
 - `apps/api/test/tabulator-export-preview-route.test.ts` locks the route behavior.
 - `apps/web/src/screens/TabulatorPreviewScreen.tsx` displays an operator-facing preview-only surface with counts, included records, omission reasons, provenance coverage, safety flags, and optional article ID scoping.
 - The preview UI can create an operator-confirmed browser download of the allowlisted `BroadListerReviewedMediaExportBundle.v1` payload only.
-- No backend file writer or Tabulator integration exists yet.
+- `docs/BROADLISTER_TABULATOR_OFFLINE_IMPORT_PLAN.md` defines the proposed Tabulator-side offline importer/dry-run plan.
+- `docs/BROADLISTER_OPERATOR_BUNDLE_RUNBOOK.md` defines operator handling for downloaded bundles.
+- `docs/sample-artifacts/broadlister-tabulator-preview-bundle.sample.json` provides a sanitized sample bundle for future adapter planning.
+- No backend file writer, Tabulator importer, or Tabulator runtime integration exists in BroadLister.
 
 ## Intent
 
@@ -86,9 +89,10 @@ If a future client-scoped export is approved, it must use a separate `BroadListe
 1. Completed scaffold: read-only API route exposes a DB-backed in-memory `BroadListerReviewedMediaExportBundle` preview.
 2. Completed scaffold: operator UI preview surface displays counts, included records, provenance coverage, omitted rows/reasons, safety flags, and optional article ID scoping without writing files.
 3. Completed scaffold: operator-confirmed browser download writes the allowlisted bundle JSON to the operator's local downloads only.
-4. Next implementation slice, if approved: plan/build the Tabulator-side import adapter or a server-side local file export only if a backend writer is explicitly needed.
-5. A later Tabulator-side import adapter consumes that JSON file.
-6. Direct Tabulator API writes remain deferred until Bo approves them.
+4. Completed planning: documented manual bundle handling and a Tabulator-side offline importer/dry-run design.
+5. Next implementation slice, if approved: build the Tabulator-side offline adapter in the Tabulator repo, starting with `validate` and `dry_run` modes.
+6. A later Tabulator-side commit mode may consume that JSON file after operator confirmation inside Tabulator.
+7. Direct Tabulator API writes remain deferred until Bo approves them.
 
 No server-side path reading from Tabulator and no Tabulator imports in BroadLister.
 
@@ -359,6 +363,7 @@ Implementation must not begin until tests are planned for:
 
 - Direct Tabulator API POST.
 - Tabulator-side importer implementation.
+- Backend file writer in BroadLister.
 - Exporting client relevance artifacts.
 - Exporting campaign or outreach-prep data.
 - Creating Tabulator `OntologyProposal` records.

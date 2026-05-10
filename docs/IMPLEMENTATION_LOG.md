@@ -1900,3 +1900,53 @@ Completed the operator-confirmed local JSON download flow. Download remains brow
 ### Next Recommended Action
 
 - Commit, tag `phase-4-tabulator-export-json-download-complete`, and push branch/tag. Next slice should be Tabulator-side offline import adapter planning or a narrower operator runbook for handling downloaded bundles; direct Tabulator runtime integration remains deferred.
+
+---
+
+## 2026-05-10T11:11:09-07:00 — Tabulator Offline Import Planning
+
+### Action
+
+Started branch `phase-4-tabulator-offline-import-planning`. Reviewed BroadLister export contract, preview service, preview UI, and planning docs. Inspected `/home/bxby/development/reckoner-app/tabulator` read-only for Tabulator link/tag/import/proposal/provenance surfaces. Added documentation for manual bundle handling and future Tabulator-side offline importer design.
+
+### Files Changed
+
+- `docs/BROADLISTER_TABULATOR_OFFLINE_IMPORT_PLAN.md`
+- `docs/BROADLISTER_OPERATOR_BUNDLE_RUNBOOK.md`
+- `docs/sample-artifacts/broadlister-tabulator-preview-bundle.sample.json`
+- `docs/BROADLISTER_TABULATOR_BRIDGE_CONTRACT.md`
+- `docs/BROADLISTER_NEXT_DEVELOPMENT_PLAN.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `git checkout -b phase-4-tabulator-offline-import-planning`: exit 0
+- BroadLister doc/code inspection via local Node read-only scripts: exit 0
+- Tabulator doc/code inspection via local Node read-only scripts: exit 0
+- `node` sample bundle parse/forbidden-key check: exit 0
+- `pnpm build`: exit 0
+- `pnpm verify`: exit 0
+
+### Tests Run
+
+- Sample JSON fixture parse and forbidden exported-key check: pass.
+- Build: pass.
+- Full verify: pass.
+- API tests: 12 files, 60 tests passed.
+- Web unit tests: 2 files, 9 tests passed.
+
+### Hermes / Sevenfold
+
+- No review gate triggered. Planning stays within the approved file-first Tabulator bridge model and adds no runtime integration, API call, backend writer, schema change, contact export, or external write.
+
+### Blockers / Stopping Conditions
+
+- None. Tabulator currently has suitable primitives (`Link`, `ExternalSourceRecord`, `Tag`, `LinkTag`, `ResearchArtifact`, `OntologyProposal`) but no public external import route was found; plan recommends Tabulator-side offline validate/dry-run before any commit mode.
+
+### Rollback Notes
+
+- Revert the forthcoming documentation commit. No code, schema, runtime dependency, external write, or Tabulator repo change was made.
+
+### Next Recommended Action
+
+- Commit, tag `phase-4-tabulator-offline-import-planning-complete`, and push branch/tag.

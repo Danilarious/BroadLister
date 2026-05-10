@@ -1,0 +1,270 @@
+{
+  "schema": "BroadListerReviewedMediaExportBundle.v1",
+  "export_schema_version": "v1",
+  "export_id": "sample-export-001",
+  "exported_at": "2026-05-10T18:00:00.000Z",
+  "exported_by": "operator",
+  "source_system": "broadlister",
+  "export_scope": "reviewed_public_media",
+  "source_tag_or_commit": "sample-docs-fixture",
+  "source_instance": {
+    "repo": "BroadLister",
+    "git_commit": "sample-docs-fixture"
+  },
+  "validation_limits": [
+    "local JSON contract scaffold only",
+    "no Tabulator API writes",
+    "no client overlay fields",
+    "no contact methods"
+  ],
+  "eligibility_policy": {
+    "requires_reviewed_records": true,
+    "requires_provenance": true,
+    "excludes_client_overlays": true,
+    "excludes_outreach_fields": true
+  },
+  "articles": [
+    {
+      "broadlister_article_id": "article-sample-001",
+      "canonical_url": "https://example.test/media/sample-article",
+      "original_url": "https://example.test/media/sample-article?utm_source=fixture",
+      "title": "Sample reviewed article",
+      "description": "Sanitized example article for offline Tabulator import planning.",
+      "published_at": "2026-05-01T12:00:00.000Z",
+      "language": "en",
+      "outlet_id": "outlet-sample-001",
+      "outlet_name": "Example Media",
+      "tabulator_link_hint": {
+        "canonicalUrl": "https://example.test/media/sample-article",
+        "originalUrl": "https://example.test/media/sample-article?utm_source=fixture",
+        "title": "Sample reviewed article",
+        "description": "Sanitized example article for offline Tabulator import planning.",
+        "siteName": "Example Media",
+        "contentType": "article"
+      }
+    }
+  ],
+  "outlets": [
+    {
+      "broadlister_outlet_id": "outlet-sample-001",
+      "name": "Example Media",
+      "slug": "example-media",
+      "home_url": "https://example.test",
+      "home_url_host": "example.test",
+      "outlet_type": "publication",
+      "region": "global",
+      "country": "US",
+      "tabulator_metadata": {
+        "siteName": "Example Media",
+        "source_kind": "media_outlet"
+      }
+    }
+  ],
+  "bylines": [
+    {
+      "broadlister_byline_id": "byline-sample-001",
+      "broadlister_article_id": "article-sample-001",
+      "broadlister_journalist_id": "journalist-sample-001",
+      "journalist_display_name": "Sample Reporter",
+      "position": 0,
+      "confidence": "high",
+      "provenance_ids": [
+        "provenance-sample-001"
+      ],
+      "tabulator_metadata": {
+        "relation": "authored_by",
+        "export_as_metadata_only": true
+      }
+    }
+  ],
+  "tags": [
+    {
+      "broadlister_tag_id": "tag-sample-001",
+      "slug": "media-intelligence",
+      "name": "Media intelligence",
+      "kind": "topic",
+      "confidence": "high",
+      "source": "article_tag",
+      "relationship_to_ontology": "none",
+      "tabulator_tag_hint": {
+        "name": "Media intelligence",
+        "normalized_name": "media intelligence",
+        "tag_type": "system",
+        "link_tag_source": "broadlister"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "packet_id": "provenance-sample-001",
+      "citation_id": "citation-sample-001",
+      "provenance_link_id": "link-sample-001",
+      "source_type": "url",
+      "source_url": "https://example.test/media/sample-article",
+      "observed_at": "2026-05-10T18:00:00.000Z",
+      "captured_by": "operator",
+      "payload_hash": "sample-hash",
+      "target": {
+        "broadlister_model": "Article",
+        "broadlister_id": "article-sample-001",
+        "field": "canonical_url"
+      },
+      "assertion_kind": "supports",
+      "confidence": "high",
+      "tabulator_provenance_json": {
+        "source_system": "broadlister",
+        "citation_id": "citation-sample-001",
+        "observed_at": "2026-05-10T18:00:00.000Z",
+        "target_field": "canonical_url",
+        "explanation": "Sanitized BroadLister sample provenance."
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "schema": "BroadListerReviewedMediaArtifact.v1",
+      "artifact_id": "broadlister:artifact:article:article-sample-001",
+      "stable_export_key": "broadlister:article:article-sample-001:samplehash000001",
+      "review_state": "reviewed",
+      "exported_at": "2026-05-10T18:00:00.000Z",
+      "source_system": "broadlister",
+      "article": {
+        "broadlister_article_id": "article-sample-001",
+        "canonical_url": "https://example.test/media/sample-article",
+        "original_url": "https://example.test/media/sample-article?utm_source=fixture",
+        "title": "Sample reviewed article",
+        "description": "Sanitized example article for offline Tabulator import planning.",
+        "published_at": "2026-05-01T12:00:00.000Z",
+        "language": "en",
+        "outlet_id": "outlet-sample-001",
+        "outlet_name": "Example Media",
+        "tabulator_link_hint": {
+          "canonicalUrl": "https://example.test/media/sample-article",
+          "originalUrl": "https://example.test/media/sample-article?utm_source=fixture",
+          "title": "Sample reviewed article",
+          "description": "Sanitized example article for offline Tabulator import planning.",
+          "siteName": "Example Media",
+          "contentType": "article"
+        }
+      },
+      "outlet": {
+        "broadlister_outlet_id": "outlet-sample-001",
+        "name": "Example Media",
+        "slug": "example-media",
+        "home_url": "https://example.test",
+        "home_url_host": "example.test",
+        "outlet_type": "publication",
+        "region": "global",
+        "country": "US",
+        "tabulator_metadata": {
+          "siteName": "Example Media",
+          "source_kind": "media_outlet"
+        }
+      },
+      "bylines": [
+        {
+          "broadlister_byline_id": "byline-sample-001",
+          "broadlister_article_id": "article-sample-001",
+          "broadlister_journalist_id": "journalist-sample-001",
+          "journalist_display_name": "Sample Reporter",
+          "position": 0,
+          "confidence": "high",
+          "provenance_ids": [
+            "provenance-sample-001"
+          ],
+          "tabulator_metadata": {
+            "relation": "authored_by",
+            "export_as_metadata_only": true
+          }
+        }
+      ],
+      "tags": [
+        {
+          "broadlister_tag_id": "tag-sample-001",
+          "slug": "media-intelligence",
+          "name": "Media intelligence",
+          "kind": "topic",
+          "confidence": "high",
+          "source": "article_tag",
+          "relationship_to_ontology": "none",
+          "tabulator_tag_hint": {
+            "name": "Media intelligence",
+            "normalized_name": "media intelligence",
+            "tag_type": "system",
+            "link_tag_source": "broadlister"
+          }
+        }
+      ],
+      "provenance": [
+        {
+          "packet_id": "provenance-sample-001",
+          "citation_id": "citation-sample-001",
+          "provenance_link_id": "link-sample-001",
+          "source_type": "url",
+          "source_url": "https://example.test/media/sample-article",
+          "observed_at": "2026-05-10T18:00:00.000Z",
+          "captured_by": "operator",
+          "payload_hash": "sample-hash",
+          "target": {
+            "broadlister_model": "Article",
+            "broadlister_id": "article-sample-001",
+            "field": "canonical_url"
+          },
+          "assertion_kind": "supports",
+          "confidence": "high",
+          "tabulator_provenance_json": {
+            "source_system": "broadlister",
+            "citation_id": "citation-sample-001",
+            "observed_at": "2026-05-10T18:00:00.000Z",
+            "target_field": "canonical_url",
+            "explanation": "Sanitized BroadLister sample provenance."
+          }
+        }
+      ],
+      "tabulator_target": {
+        "preferred_entity": "Link",
+        "link_source_type": "broadlister_export",
+        "link_content_type": "article",
+        "external_source_system": "broadlister",
+        "external_source_record_id": "article-sample-001",
+        "source_path": [
+          "BroadLister",
+          "ReviewedMedia",
+          "article-sample-001"
+        ]
+      }
+    }
+  ],
+  "omitted": [],
+  "redaction_report": {
+    "policy": "deny_client_overlay_fields",
+    "redacted_field_count": 0,
+    "denied_fields_checked": [
+      "pitch_angle",
+      "target_rationale",
+      "suitability_note",
+      "narrative_fit_json",
+      "exclusion_flag",
+      "exclusion_reason",
+      "embargo_until",
+      "embargo_note",
+      "relationship_warmth",
+      "notes_private",
+      "summary_private",
+      "ClientNote.body_md",
+      "ClientApproval.note",
+      "Campaign.constraints_json",
+      "client_id",
+      "campaign_id",
+      "campaign_list_id"
+    ],
+    "omitted_record_count": 0
+  },
+  "summary": {
+    "article_count": 1,
+    "outlet_count": 1,
+    "byline_count": 1,
+    "tag_count": 1,
+    "provenance_packet_count": 1
+  }
+}
