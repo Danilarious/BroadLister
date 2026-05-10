@@ -174,6 +174,7 @@ Primary interface shapes:
 
 ### Phase C: Operator-triggered bridge
 
+- Current scaffold: pure BroadLister reviewed-media export contract helper and safety tests only; no runtime export route or file writer yet.
 - Implement BroadLister reviewed media export preview and local JSON file/download.
 - Keep Tabulator import as a later Tabulator-owned adapter.
 - Import Tabulator/Bucketer export files or API snapshots by explicit operator action only after export shape is proven.

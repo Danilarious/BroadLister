@@ -2,13 +2,13 @@
 
 ## Recommended Next Phase
 
-Next implementation phase should be `B1) Tabulator reviewed-media local JSON export`, after Bo reviews and approves the planning contract.
+Next implementation phase should be `B1) Tabulator reviewed-media local JSON export`, after Bo reviews and approves the planning contract and test scaffold.
 
 The browser-validation and hardening pass added Playwright coverage, expanded API hardening tests, documented Tailscale access, and preserved the no-outreach and cross-client safety posture. The import-ingestion pass added deterministic, review-gated URL article ingestion and CSV contact imports. The reconciliation pass added deterministic duplicate matching, linked approval resolution, import batch filtering, defer/reject paths, and review queue context panels. No additional hardening block is currently severe enough to defer ontology planning.
 
 This planning package defines alignment contracts for ontology-core, Tabulator, and Bucketer. It does not hard-couple BroadLister to ProjectReckoner, Tabulator, TaskReckoner, Bucketer, Hermes, or sevenfold at runtime.
 
-Implemented branches: `phase-4-ontology-snapshot-import`, `phase-4-ontology-review-refinement`. Current planning branch: `phase-4-tabulator-export-planning`.
+Implemented branches: `phase-4-ontology-snapshot-import`, `phase-4-ontology-review-refinement`, `phase-4-tabulator-export-planning`. Current scaffold branch: `phase-4-tabulator-export-tests`.
 
 ## Objective
 
@@ -83,7 +83,7 @@ Bridge A now implements the smallest safe bridge plus local review refinement: a
 
 Tabulator export implementation should include:
 
-- `BroadListerReviewedMediaExportBundle.v1` local JSON bundle generation.
+- Extend the existing pure `BroadListerReviewedMediaExportBundle.v1` contract helper into a DB-backed preview service.
 - Preview route/UI that shows eligible records, omitted records, provenance coverage, and forbidden overlay categories.
 - File/download export only; no Tabulator POST.
 - Eligible artifact types: reviewed articles, outlet references, byline references, global tags, provenance packets, import/source metadata.

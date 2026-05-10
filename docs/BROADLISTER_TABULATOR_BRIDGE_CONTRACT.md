@@ -6,6 +6,12 @@ Planning-only. No export adapter is implemented in this phase.
 
 This contract defines the next safe bridge after local ontology snapshot import refinement: reviewed BroadLister media artifacts exported to a local JSON file that Tabulator may later import. BroadLister must not POST to Tabulator, import Tabulator runtime code, or require Tabulator to run.
 
+Current implementation scaffold:
+
+- `apps/api/src/services/tabulator-export-contract.ts` contains a pure in-memory contract helper and safety validator.
+- `apps/api/test/tabulator-export-contract.test.ts` locks the forbidden-field, reviewed-only, provenance-required, deterministic-shape, idempotency, no-network, and no-external-write expectations.
+- No API route, UI, DB query, file writer, or Tabulator integration exists yet.
+
 ## Intent
 
 Tabulator stores canonical links, generic tags, link-tag edges, external source records, ontology proposals, and research artifacts. BroadLister stores media-specific journalist, outlet, article, byline, tag, citation, review, and client/campaign overlay data.
@@ -71,12 +77,13 @@ If a future client-scoped export is approved, it must use a separate `BroadListe
 
 ## First Future Implementation Path
 
-1. Add a BroadLister export preview route that builds an in-memory `BroadListerReviewedMediaExportBundle`.
-2. Preview shows counts, included record IDs, provenance coverage, and excluded overlay categories.
-3. Operator confirms a local JSON file export.
-4. BroadLister writes a local file under an operator-selected/export directory or returns a download response.
-5. A later Tabulator-side import adapter consumes that JSON file.
-6. Direct Tabulator API writes remain deferred until Bo approves them.
+1. Build from the existing pure contract helper into a DB-backed preview service.
+2. Add a BroadLister export preview route that builds an in-memory `BroadListerReviewedMediaExportBundle`.
+3. Preview shows counts, included record IDs, provenance coverage, and excluded overlay categories.
+4. Operator confirms a local JSON file export.
+5. BroadLister writes a local file under an operator-selected/export directory or returns a download response.
+6. A later Tabulator-side import adapter consumes that JSON file.
+7. Direct Tabulator API writes remain deferred until Bo approves them.
 
 No server-side path reading from Tabulator and no Tabulator imports in BroadLister.
 

@@ -1410,6 +1410,57 @@ Started branch `phase-4-tabulator-export-planning` from `phase-4-ontology-review
 
 ---
 
+## 2026-05-10T10:08:48-07:00 — Tabulator Export Test Scaffold
+
+### Action
+
+Started branch `phase-4-tabulator-export-tests` from `phase-4-tabulator-export-planning-complete`. Added a pure in-memory `BroadListerReviewedMediaExportBundle.v1` contract helper and safety tests. No API route, UI, DB query, file writer, Tabulator POST/import integration, network behavior, external write, schema change, or user-facing export behavior was added.
+
+### Files Changed
+
+- `apps/api/src/services/tabulator-export-contract.ts`
+- `apps/api/test/tabulator-export-contract.test.ts`
+- `docs/BROADLISTER_TABULATOR_BRIDGE_CONTRACT.md`
+- `docs/BROADLISTER_PROJECTRECKONER_BRIDGE_PLAN.md`
+- `docs/BROADLISTER_NEXT_DEVELOPMENT_PLAN.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `git checkout -b phase-4-tabulator-export-tests`: exit 0
+- `pnpm --filter @broadlister/api typecheck && pnpm --filter @broadlister/api test -- tabulator-export-contract.test.ts`: exit 1; tightened forbidden-field path matching and test volatility handling
+- `pnpm --filter @broadlister/api typecheck && pnpm --filter @broadlister/api test -- tabulator-export-contract.test.ts`: exit 0
+- `pnpm verify`: exit 0
+- `pnpm check:global-models && pnpm check:denylist && pnpm build && pnpm --filter @broadlister/api test -- cross-client-leakage.test.ts`: exit 0
+
+### Tests Run
+
+- API targeted suite: 10 files, 50 tests passed.
+- Full `pnpm verify`: API 10 files / 50 tests passed; web 1 file / 3 tests passed; typecheck and lint passed.
+- Global-model guard: pass.
+- Dependency deny-list guard: pass.
+- Build: pass.
+- New Tabulator export contract tests cover forbidden-field denylist, client overlay leakage detection, reviewed-only export, provenance-required omission, deterministic bundle shape, repeat-export idempotency, no network calls, no external writes, and no Tabulator runtime dependency.
+- Cross-client leakage integration test: pass in targeted API suite.
+
+### Hermes / Sevenfold
+
+- No new review gate triggered. This slice implements Hermes PASS WITH CONDITIONS safety scaffolding only and does not implement an export feature.
+
+### Blockers / Stopping Conditions
+
+- None.
+
+### Rollback Notes
+
+- Revert the forthcoming branch commit. No database, schema, dependency, or runtime behavior changed.
+
+### Next Recommended Action
+
+- Commit, tag `phase-4-tabulator-export-tests-complete`, and report that export implementation remains deferred.
+
+---
+
 ## 2026-05-09T21:05:15-07:00 — Bridge A Final Verification
 
 ### Action
