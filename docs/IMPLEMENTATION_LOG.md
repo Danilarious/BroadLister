@@ -1796,3 +1796,107 @@ Completed the preview UI slice on `phase-4-tabulator-export-preview-ui`. Added t
 ### Next Recommended Action
 
 - Commit, tag `phase-4-tabulator-export-preview-ui-complete`, push branch/tag. Next product slice should be operator-confirmed local JSON download/export planning or implementation, only if Bo approves.
+
+---
+
+## 2026-05-10T10:56:21-07:00 — Tabulator Export JSON Download
+
+### Action
+
+Started branch `phase-4-tabulator-export-json-download` from `phase-4-tabulator-export-preview-ui-complete`. Added an operator-confirmed browser download flow for the existing allowlisted Tabulator preview bundle. The flow validates bundle version, safety flags, and forbidden contact/client-private field fragments before creating a local browser download.
+
+### Files Changed
+
+- `apps/web/src/screens/TabulatorPreviewScreen.tsx`
+- `apps/web/src/styles.css`
+- `apps/web/src/utils/tabulatorPreview.ts`
+- `apps/web/src/utils/tabulatorPreview.test.ts`
+- `e2e/broadlister-smoke.spec.ts`
+- `docs/BROADLISTER_TABULATOR_BRIDGE_CONTRACT.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `git checkout -b phase-4-tabulator-export-json-download`: exit 0
+- `pnpm --filter @broadlister/web typecheck`: exit 0
+- `pnpm --filter @broadlister/web test`: exit 0
+
+### Tests Run
+
+- Web typecheck: pass.
+- Web unit tests: 2 files, 9 tests passed.
+
+### Hermes / Sevenfold
+
+- No review gate triggered. This is a BroadLister-local browser download of the existing reviewed-media bundle; it adds no Tabulator runtime dependency, external write, schema change, contact export, or outreach behavior.
+
+### Blockers / Stopping Conditions
+
+- None.
+
+### Rollback Notes
+
+- Revert the forthcoming commit. No schema migration, backend writer, Tabulator dependency, or external write was added.
+
+### Next Recommended Action
+
+- Run full verification stack. If green, commit, tag `phase-4-tabulator-export-json-download-complete`, and push branch/tag.
+
+---
+
+## 2026-05-10T11:01:59-07:00 — Tabulator Export JSON Download Closeout
+
+### Action
+
+Completed the operator-confirmed local JSON download flow. Download remains browser-local and uses only the allowlisted `BroadListerReviewedMediaExportBundle.v1` payload returned by the existing preview route.
+
+### Files Changed
+
+- `apps/web/src/screens/TabulatorPreviewScreen.tsx`
+- `apps/web/src/styles.css`
+- `apps/web/src/utils/tabulatorPreview.ts`
+- `apps/web/src/utils/tabulatorPreview.test.ts`
+- `e2e/broadlister-smoke.spec.ts`
+- `docs/BROADLISTER_TABULATOR_BRIDGE_CONTRACT.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `pnpm --filter @broadlister/web typecheck`: exit 0
+- `pnpm --filter @broadlister/web test`: exit 0
+- `pnpm verify`: exit 0
+- `pnpm check:global-models`: exit 0
+- `pnpm check:denylist`: exit 0
+- `pnpm build`: exit 0
+- `pnpm --filter @broadlister/api test -- tabulator-export-preview.test.ts`: exit 0
+- `pnpm --filter @broadlister/api test -- tabulator-export-preview-route.test.ts`: exit 0
+- `pnpm --filter @broadlister/api test -- cross-client-leakage.test.ts`: exit 0
+- `pnpm test:e2e`: exit 0
+- `pnpm test:mobile`: exit 0
+
+### Tests Run
+
+- Full verify: pass.
+- Global-model guard: pass.
+- Dependency deny-list guard: pass.
+- Build: pass.
+- API tests: 12 files, 60 tests passed.
+- Web unit tests: 2 files, 9 tests passed.
+- Playwright E2E: 12 tests passed.
+- Playwright mobile-only: 6 tests passed.
+
+### Hermes / Sevenfold
+
+- No review gate triggered. No Tabulator runtime/API integration, external write, backend file writer, contact export, schema change, or outreach behavior was added.
+
+### Blockers / Stopping Conditions
+
+- None. An early concurrent Playwright run exposed a checkbox touch-target issue and an overly broad raw-string denylist assertion; both were fixed and sequential verification passed.
+
+### Rollback Notes
+
+- Revert the forthcoming commit. No database migration, backend file writer, external dependency, or external write was introduced.
+
+### Next Recommended Action
+
+- Commit, tag `phase-4-tabulator-export-json-download-complete`, and push branch/tag. Next slice should be Tabulator-side offline import adapter planning or a narrower operator runbook for handling downloaded bundles; direct Tabulator runtime integration remains deferred.

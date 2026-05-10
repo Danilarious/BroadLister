@@ -2,7 +2,7 @@
 
 ## Status
 
-Read-only preview scaffold with operator UI. No export adapter, JSON download, file writer, or Tabulator runtime integration is implemented in this phase.
+Read-only preview scaffold with operator-confirmed browser JSON download. No export adapter, backend file writer, or Tabulator runtime integration is implemented in this phase.
 
 This contract defines the next safe bridge after local ontology snapshot import refinement: reviewed BroadLister media artifacts exported to a local JSON file that Tabulator may later import. BroadLister must not POST to Tabulator, import Tabulator runtime code, or require Tabulator to run.
 
@@ -15,7 +15,8 @@ Current implementation scaffold:
 - `GET /tabulator/export/preview` exposes that in-memory preview through a read-only local API route.
 - `apps/api/test/tabulator-export-preview-route.test.ts` locks the route behavior.
 - `apps/web/src/screens/TabulatorPreviewScreen.tsx` displays an operator-facing preview-only surface with counts, included records, omission reasons, provenance coverage, safety flags, and optional article ID scoping.
-- No JSON download, file writer, or Tabulator integration exists yet.
+- The preview UI can create an operator-confirmed browser download of the allowlisted `BroadListerReviewedMediaExportBundle.v1` payload only.
+- No backend file writer or Tabulator integration exists yet.
 
 ## Intent
 
@@ -28,7 +29,7 @@ The bridge should make reviewed public media intelligence portable without leaki
 - No BroadLister runtime dependency on Tabulator, ProjectReckoner, Bucketer, Hermes, or sevenfold.
 - No direct Tabulator API writes in the first implementation.
 - No network calls in export generation.
-- Export is operator-triggered and previewed before file write.
+- Export is operator-triggered and previewed before browser download or any future file write.
 - Only approved/reviewed public media facts are export-eligible.
 - Every exported artifact must include provenance.
 - Client/campaign overlay fields are excluded by default.
@@ -84,8 +85,8 @@ If a future client-scoped export is approved, it must use a separate `BroadListe
 
 1. Completed scaffold: read-only API route exposes a DB-backed in-memory `BroadListerReviewedMediaExportBundle` preview.
 2. Completed scaffold: operator UI preview surface displays counts, included records, provenance coverage, omitted rows/reasons, safety flags, and optional article ID scoping without writing files.
-3. Next implementation slice, if approved: add an operator-confirmed local JSON download/export response using the same allowlisted bundle shape.
-4. BroadLister must write only an operator-confirmed local file or return an operator-triggered download response.
+3. Completed scaffold: operator-confirmed browser download writes the allowlisted bundle JSON to the operator's local downloads only.
+4. Next implementation slice, if approved: plan/build the Tabulator-side import adapter or a server-side local file export only if a backend writer is explicitly needed.
 5. A later Tabulator-side import adapter consumes that JSON file.
 6. Direct Tabulator API writes remain deferred until Bo approves them.
 

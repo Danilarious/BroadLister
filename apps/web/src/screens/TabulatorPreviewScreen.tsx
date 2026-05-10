@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { getTabulatorExportPreview } from "../api.js";
 import type { TabulatorExportPreview } from "../types.js";
-import { parseArticleIdsInput, previewCoverageLabel } from "../utils/tabulatorPreview.js";
+import { parseArticleIdsInput, previewCoverageLabel, tabulatorBundleDownloadFilename, tabulatorBundleDownloadText, validateTabulatorBundleDownload } from "../utils/tabulatorPreview.js";
 
 export function TabulatorPreviewScreen() {
   const [preview, setPreview] = useState<TabulatorExportPreview>();
   const [articleIdsText, setArticleIdsText] = useState("");
   const [sourceTagOrCommit, setSourceTagOrCommit] = useState("");
+  const [downloadConfirmed, setDownloadConfirmed] = useState(false);
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -20,6 +21,7 @@ export function TabulatorPreviewScreen() {
         article_ids: articleIds.length > 0 ? articleIds : undefined
       });
       setPreview(next);
+      setDownloadConfirmed(false);
       setError(undefined);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Preview failed.");
@@ -35,6 +37,27 @@ export function TabulatorPreviewScreen() {
   const summary = preview?.bundle.summary;
   const omittedRecords = preview?.metadata.omitted_records ?? [];
   const includedArticleIds = preview?.metadata.included_article_ids ?? [];
+  const downloadValidation = validateTabulatorBundleDownload(preview);
+  const canDownload = Boolean(preview && downloadConfirmed && downloadValidation.ok);
+
+  function downloadBundle() {
+    if (!preview) return;
+    try {
+      const text = tabulatorBundleDownloadText(preview);
+      const blob = new Blob([text], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = tabulatorBundleDownloadFilename(preview.bundle.exported_at);
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setError(undefined);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Download validation failed.");
+    }
+  }
 
   return (
     <section className="export-preview">
@@ -47,8 +70,8 @@ export function TabulatorPreviewScreen() {
       </div>
 
       <div className="guardrail export-guardrail" role="note">
-        <strong>Preview only.</strong>
-        <span>No JSON file is written. No Tabulator API call is made. Contact methods, client overlays, outreach fields, pitch angles, exclusions, warmth, and campaign strategy remain excluded.</span>
+        <strong>Local artifact only.</strong>
+        <span>The preview can be downloaded as a local JSON file after operator confirmation. It does not write to Tabulator, call Tabulator, include contact methods, or include client-private overlay fields.</span>
       </div>
 
       <div className="export-grid">
@@ -161,6 +184,21 @@ export function TabulatorPreviewScreen() {
               </ul>
             </div>
           )}
+
+          <div className="download-card">
+            <h3>Local JSON artifact</h3>
+            <p>This creates a browser download of the reviewed media bundle currently shown in preview. It does not write a backend file, call Tabulator, import into Tabulator, or include contact methods/client-private overlays.</p>
+            {downloadValidation.reasons.length > 0 && (
+              <div className="error-inline" role="alert">
+                {downloadValidation.reasons.join(" ")}
+              </div>
+            )}
+            <label className="confirmation-check">
+              <input type="checkbox" checked={downloadConfirmed} disabled={!preview || !downloadValidation.ok} onChange={(event) => setDownloadConfirmed(event.target.checked)} />
+              <span>I confirm this downloads a local JSON artifact only; no Tabulator write/call occurs, and contact/client-private fields remain excluded.</span>
+            </label>
+            <button disabled={!canDownload} onClick={downloadBundle}>Download local JSON bundle</button>
+          </div>
         </aside>
       </div>
     </section>

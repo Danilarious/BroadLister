@@ -641,7 +641,8 @@ summary {
 .export-main,
 .export-side,
 .preview-section,
-.preview-facts {
+.preview-facts,
+.download-card {
   display: grid;
   gap: var(--space-4);
 }
@@ -654,7 +655,8 @@ summary {
 
 .preview-status div,
 .omission-card,
-.preview-facts {
+.preview-facts,
+.download-card {
   background: var(--surface-muted);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -682,6 +684,7 @@ summary {
 
 .preview-section h3,
 .preview-facts h4,
+.download-card h3,
 .export-side h3 {
   margin: 0;
 }
@@ -718,6 +721,26 @@ summary {
   color: var(--muted);
   line-height: 1.5;
   margin: 0;
+}
+
+.download-card p {
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.confirmation-check {
+  align-items: start;
+  color: var(--ink);
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: auto 1fr;
+}
+
+.confirmation-check input {
+  margin-top: 2px;
+  min-height: 44px;
+  width: 44px;
 }
 
 @media (prefers-reduced-motion: reduce) {

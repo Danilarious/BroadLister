@@ -80,17 +80,46 @@ test("import and review screens expose labeled operator controls", async ({ page
 test("tabulator export preview surface is read-only and responsive", async ({ page }) => {
   await page.getByRole("button", { name: "Exports" }).click();
   await expect(page.getByRole("heading", { name: "Reviewed media export preview" })).toBeVisible();
-  await expect(page.getByText("Preview only.")).toBeVisible();
-  await expect(page.getByText("No JSON file is written. No Tabulator API call is made.")).toBeVisible();
+  await expect(page.getByText("Local artifact only.")).toBeVisible();
+  await expect(page.getByText("It does not write to Tabulator, call Tabulator, include contact methods, or include client-private overlay fields.")).toBeVisible();
   await expect(page.getByLabel("Source tag or commit")).toBeVisible();
   await expect(page.getByLabel("Article IDs")).toBeVisible();
   await expect(page.getByRole("button", { name: "Preview selected IDs" })).toBeVisible();
   await expect(page.getByText("BroadListerReviewedMediaExportBundle.v1")).toBeVisible();
   await expect(page.getByText("Omitted or excluded records")).toBeVisible();
   await expect(page.getByText("Safety flags")).toBeVisible();
-  await expect(page.locator("main")).not.toContainText("Download");
+  await expect(page.getByRole("button", { name: "Download local JSON bundle" })).toBeDisabled();
   await expect(page.locator("main")).not.toContainText("Send to Tabulator");
   await expectNoHorizontalOverflow(page);
+});
+
+test("tabulator export json download requires operator confirmation", async ({ page }) => {
+  await page.getByRole("button", { name: "Exports" }).click();
+  await expect(page.getByText("BroadListerReviewedMediaExportBundle.v1")).toBeVisible();
+  const downloadButton = page.getByRole("button", { name: "Download local JSON bundle" });
+  await expect(downloadButton).toBeDisabled();
+  await expect(page.getByText(/no Tabulator write\/call occurs/)).toBeVisible();
+
+  await page.getByLabel(/I confirm this downloads a local JSON artifact only/).check();
+  await expect(downloadButton).toBeEnabled();
+  const download = await Promise.all([
+    page.waitForEvent("download"),
+    downloadButton.click()
+  ]).then(([artifact]) => artifact);
+
+  expect(download.suggestedFilename()).toMatch(/^broadlister-tabulator-preview-bundle-\d{8}-\d{6}\.json$/);
+  const stream = await download.createReadStream();
+  const chunks: Buffer[] = [];
+  await new Promise<void>((resolve, reject) => {
+    stream.on("data", (chunk: Buffer) => chunks.push(chunk));
+    stream.on("end", resolve);
+    stream.on("error", reject);
+  });
+  const text = Buffer.concat(chunks).toString("utf8");
+  const bundle = JSON.parse(text);
+  expect(bundle.schema).toBe("BroadListerReviewedMediaExportBundle.v1");
+  expect(bundle.metadata).toBeUndefined();
+  expect(findForbiddenExportKeys(bundle)).toEqual([]);
 });
 
 test("mobile import flow creates visible article proposals", async ({ page }) => {
@@ -144,4 +173,23 @@ async function expectAccessibleTouchTargets(page: import("@playwright/test").Pag
 async function screenshot(page: import("@playwright/test").Page, filename: string) {
   mkdirSync("test-results/screenshots", { recursive: true });
   await page.screenshot({ fullPage: true, path: `test-results/screenshots/${filename}` });
+}
+
+function findForbiddenExportKeys(value: unknown): string[] {
+  const hits = new Set<string>();
+  walkForForbiddenExportKeys(value, [], hits);
+  return Array.from(hits).sort();
+}
+
+function walkForForbiddenExportKeys(value: unknown, path: string[], hits: Set<string>) {
+  if (!value || typeof value !== "object") return;
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => walkForForbiddenExportKeys(item, [...path, String(index)], hits));
+    return;
+  }
+  for (const [key, child] of Object.entries(value)) {
+    const nextPath = [...path, key];
+    if (key === "contact_method" || key === "client_id" || key === "pitch_angle") hits.add(nextPath.join("."));
+    walkForForbiddenExportKeys(child, nextPath, hits);
+  }
 }
