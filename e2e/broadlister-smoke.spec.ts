@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 
-const navLabels = ["Journalists", "Outlets", "Articles", "Tags", "Imports", "Review Queue", "Campaigns"];
+const navLabels = ["Journalists", "Outlets", "Articles", "Tags", "Imports", "Review Queue", "Campaigns", "Exports"];
 const screenText: Record<string, string> = {
   Journalists: "Global media graph",
   Outlets: "Global media graph",
@@ -9,7 +9,8 @@ const screenText: Record<string, string> = {
   Tags: "Global media graph",
   Imports: "CSV media contacts",
   "Review Queue": "Review detail",
-  Campaigns: "Select a client"
+  Campaigns: "Select a client",
+  Exports: "Reviewed media export preview"
 };
 
 test.beforeEach(async ({ page }) => {
@@ -74,6 +75,22 @@ test("import and review screens expose labeled operator controls", async ({ page
   await expect(page.getByRole("heading", { name: "Review detail" })).toBeVisible();
   await expect(page.getByText(/Imports never write directly to global records|Select a review item/)).toBeVisible();
   await expect(page.getByLabel("Proposal kind")).toBeVisible();
+});
+
+test("tabulator export preview surface is read-only and responsive", async ({ page }) => {
+  await page.getByRole("button", { name: "Exports" }).click();
+  await expect(page.getByRole("heading", { name: "Reviewed media export preview" })).toBeVisible();
+  await expect(page.getByText("Preview only.")).toBeVisible();
+  await expect(page.getByText("No JSON file is written. No Tabulator API call is made.")).toBeVisible();
+  await expect(page.getByLabel("Source tag or commit")).toBeVisible();
+  await expect(page.getByLabel("Article IDs")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Preview selected IDs" })).toBeVisible();
+  await expect(page.getByText("BroadListerReviewedMediaExportBundle.v1")).toBeVisible();
+  await expect(page.getByText("Omitted or excluded records")).toBeVisible();
+  await expect(page.getByText("Safety flags")).toBeVisible();
+  await expect(page.locator("main")).not.toContainText("Download");
+  await expect(page.locator("main")).not.toContainText("Send to Tabulator");
+  await expectNoHorizontalOverflow(page);
 });
 
 test("mobile import flow creates visible article proposals", async ({ page }) => {

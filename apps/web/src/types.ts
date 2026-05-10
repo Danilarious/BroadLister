@@ -163,3 +163,87 @@ export type CampaignWorkspace = Client & {
   outreach_statuses: ApiRecord[];
   approvals: ApiRecord[];
 };
+
+export type TabulatorExportPreviewArticle = {
+  broadlister_article_id: string;
+  canonical_url: string;
+  title: string;
+  outlet_id: string;
+  outlet_name: string;
+};
+
+export type TabulatorExportPreviewOutlet = {
+  broadlister_outlet_id: string;
+  name: string;
+  slug: string;
+};
+
+export type TabulatorExportPreviewByline = {
+  broadlister_byline_id: string;
+  broadlister_article_id: string;
+  broadlister_journalist_id: string;
+  journalist_display_name: string;
+};
+
+export type TabulatorExportPreviewOmittedRecord = {
+  broadlister_model: string;
+  id: string;
+  reason: string;
+  detail?: string;
+};
+
+export type TabulatorExportPreview = {
+  bundle: {
+    schema: "BroadListerReviewedMediaExportBundle.v1";
+    export_schema_version: "v1";
+    export_id: string;
+    exported_at: string;
+    exported_by: string;
+    source_system: "broadlister";
+    export_scope: "reviewed_public_media";
+    source_tag_or_commit?: string;
+    validation_limits: string[];
+    eligibility_policy: {
+      requires_reviewed_records: boolean;
+      requires_provenance: boolean;
+      excludes_client_overlays: boolean;
+      excludes_outreach_fields: boolean;
+    };
+    articles: TabulatorExportPreviewArticle[];
+    outlets: TabulatorExportPreviewOutlet[];
+    bylines: TabulatorExportPreviewByline[];
+    tags: Array<{ broadlister_tag_id: string; name: string; kind: string; slug: string }>;
+    provenance: Array<{ packet_id: string; citation_id: string; target: { broadlister_model: string; broadlister_id: string; field?: string } }>;
+    artifacts: Array<{ artifact_id: string; stable_export_key: string; review_state: "reviewed" }>;
+    omitted: TabulatorExportPreviewOmittedRecord[];
+    redaction_report: {
+      policy: string;
+      redacted_field_count: number;
+      omitted_record_count: number;
+    };
+    summary: {
+      article_count: number;
+      outlet_count: number;
+      byline_count: number;
+      tag_count: number;
+      provenance_packet_count: number;
+    };
+  };
+  metadata: {
+    schema: "BroadListerTabulatorExportPreview.v1";
+    export_id: string;
+    generated_at: string;
+    mode: "service_only_preview";
+    included_article_ids: string[];
+    omitted_records: TabulatorExportPreviewOmittedRecord[];
+    safety: {
+      route_added: boolean;
+      ui_added: boolean;
+      file_writer_added: boolean;
+      network_calls_allowed: boolean;
+      tabulator_runtime_dependency_allowed: boolean;
+      contacts_exported: boolean;
+      client_overlay_fields_excluded: boolean;
+    };
+  };
+};

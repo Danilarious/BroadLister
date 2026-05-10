@@ -1312,6 +1312,76 @@ Started branch `phase-4-ontology-snapshot-import` from `phase-4-ontology-alignme
 
 ---
 
+## 2026-05-10T10:36:20-07:00 — Tabulator Export Preview UI
+
+### Action
+
+Started branch `phase-4-tabulator-export-preview-ui` from the clean preview-route checkpoint. Added an operator-facing `Exports` screen that calls `GET /tabulator/export/preview` and displays the in-memory bundle preview only.
+
+### Files Changed
+
+- `apps/web/src/App.tsx`
+- `apps/web/src/api.ts`
+- `apps/web/src/screens/TabulatorPreviewScreen.tsx`
+- `apps/web/src/styles.css`
+- `apps/web/src/types.ts`
+- `apps/web/src/utils/tabulatorPreview.ts`
+- `apps/web/src/utils/tabulatorPreview.test.ts`
+- `e2e/broadlister-smoke.spec.ts`
+- `docs/BROADLISTER_TABULATOR_BRIDGE_CONTRACT.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `git status --short --branch`: exit 0
+- `pnpm --filter @broadlister/web typecheck`: exit 0
+- `pnpm --filter @broadlister/web test`: exit 0
+- `pnpm verify`: exit 0
+- `pnpm check:global-models`: exit 0
+- `pnpm check:denylist`: exit 0
+- `pnpm build`: exit 0
+- `pnpm --filter @broadlister/api test -- tabulator-export-preview.test.ts`: exit 0
+- `pnpm --filter @broadlister/api test -- tabulator-export-preview-route.test.ts`: exit 0
+- `pnpm --filter @broadlister/api test -- cross-client-leakage.test.ts`: exit 0
+- `pnpm test:e2e`: exit 1 initially; local Playwright Chromium cache missing
+- `pnpm test:mobile`: exit 1 initially; local Playwright Chromium cache missing
+- `pnpm exec playwright install chromium`: exit 0; installed local Playwright browser cache only
+- `pnpm test:e2e`: exit 0
+- `pnpm test:mobile`: exit 1 during concurrent e2e run; one timeout in import flow
+- `pnpm test:mobile`: exit 0 when rerun alone
+- `pnpm test:e2e`: exit 0 after adding the Tabulator preview UI smoke test
+- `pnpm check:global-models`: exit 0 after e2e update
+- `pnpm check:denylist`: exit 0 after e2e update
+- `pnpm build`: exit 0 after e2e update
+- `pnpm test:mobile`: exit 0 after e2e update
+
+### Tests Run
+
+- Web typecheck/lint/unit: pass.
+- Web unit tests: 2 files, 5 tests passed.
+- API tests through `pnpm verify`: 12 files, 60 tests passed.
+- Targeted API Tabulator preview, preview route, and cross-client leakage suites: pass.
+- Playwright E2E desktop/mobile: 10 tests passed after adding the preview UI coverage.
+- Playwright mobile-only: 5 tests passed.
+
+### Hermes / Sevenfold
+
+- No new review gate triggered. This slice adds a BroadLister-local preview UI only and does not change export shape, add runtime coupling, or create external writes.
+
+### Blockers / Stopping Conditions
+
+- None.
+
+### Rollback Notes
+
+- Revert the forthcoming commit. No schema migration, route mutation, file writer, JSON download, Tabulator dependency, or external write was added.
+
+### Next Recommended Action
+
+- Run the full required verification stack. If green, commit, tag `phase-4-tabulator-export-preview-ui-complete`, and push branch/tag.
+
+---
+
 ## 2026-05-09T21:19:40-07:00 — Ontology Review Refinement Final Verification
 
 ### Action
@@ -1665,3 +1735,64 @@ Started branch `phase-4-ontology-review-refinement` from `phase-4-ontology-snaps
 ### Next Recommended Action
 
 - Run full verification stack, backup DB, commit, tag, push, then stop for Bo review.
+
+---
+
+## 2026-05-10T10:41:53-07:00 — Tabulator Export Preview UI Closeout
+
+### Action
+
+Completed the preview UI slice on `phase-4-tabulator-export-preview-ui`. Added the `Exports` nav screen, preview-only Tabulator bundle panel, optional article ID scoping controls, omission/provenance/safety display, responsive styles, web utility tests, and Playwright coverage for the new UI.
+
+### Files Changed
+
+- `apps/web/src/App.tsx`
+- `apps/web/src/api.ts`
+- `apps/web/src/screens/TabulatorPreviewScreen.tsx`
+- `apps/web/src/styles.css`
+- `apps/web/src/types.ts`
+- `apps/web/src/utils/tabulatorPreview.ts`
+- `apps/web/src/utils/tabulatorPreview.test.ts`
+- `e2e/broadlister-smoke.spec.ts`
+- `docs/BROADLISTER_TABULATOR_BRIDGE_CONTRACT.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `pnpm verify`: exit 0
+- `pnpm check:global-models`: exit 0
+- `pnpm check:denylist`: exit 0
+- `pnpm build`: exit 0
+- `pnpm --filter @broadlister/api test -- tabulator-export-preview.test.ts`: exit 0
+- `pnpm --filter @broadlister/api test -- tabulator-export-preview-route.test.ts`: exit 0
+- `pnpm --filter @broadlister/api test -- cross-client-leakage.test.ts`: exit 0
+- `pnpm exec playwright install chromium`: exit 0; local tool cache only, needed because browser binary was missing
+- `pnpm test:e2e`: exit 0
+- `pnpm test:mobile`: exit 0
+
+### Tests Run
+
+- Full verify: pass.
+- Global-model guard: pass.
+- Dependency deny-list guard: pass.
+- Build: pass.
+- API tests: 12 files, 60 tests passed.
+- Web unit tests: 2 files, 5 tests passed.
+- Playwright E2E: 10 tests passed.
+- Playwright mobile-only: 5 tests passed.
+
+### Hermes / Sevenfold
+
+- No review gate triggered. UI is preview-only inside BroadLister; no export shape change, runtime coupling, JSON download, file writer, Tabulator API call, external write, contact export, or schema change.
+
+### Blockers / Stopping Conditions
+
+- None.
+
+### Rollback Notes
+
+- Revert the forthcoming commit. Remove the local Playwright Chromium cache only if reclaiming disk space is desired; it is not part of the repo.
+
+### Next Recommended Action
+
+- Commit, tag `phase-4-tabulator-export-preview-ui-complete`, push branch/tag. Next product slice should be operator-confirmed local JSON download/export planning or implementation, only if Bo approves.

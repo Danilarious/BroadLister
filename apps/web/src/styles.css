@@ -230,7 +230,8 @@ pre {
 .workspace-grid,
 .review-layout,
 .import-grid,
-.campaign-grid {
+.campaign-grid,
+.export-preview {
   margin: 0 auto;
   max-width: 1480px;
 }
@@ -621,6 +622,104 @@ summary {
   color: var(--danger);
 }
 
+.export-preview {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.export-grid {
+  align-items: start;
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.75fr);
+}
+
+.export-guardrail {
+  margin-top: 0;
+}
+
+.export-main,
+.export-side,
+.preview-section,
+.preview-facts {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.preview-status {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.preview-status div,
+.omission-card,
+.preview-facts {
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.preview-status span {
+  color: var(--muted);
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.preview-status strong,
+.record-table code,
+.omission-card code {
+  overflow-wrap: anywhere;
+}
+
+.export-metrics {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.preview-section h3,
+.preview-facts h4,
+.export-side h3 {
+  margin: 0;
+}
+
+.record-table small,
+.omission-card small {
+  color: var(--muted);
+  display: block;
+  margin-top: var(--space-1);
+  overflow-wrap: anywhere;
+}
+
+.omission-list {
+  display: grid;
+  gap: var(--space-2);
+  max-height: 360px;
+  overflow: auto;
+}
+
+.omission-card {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.preview-facts ul {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.preview-facts p {
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -640,7 +739,10 @@ summary {
   .review-layout,
   .import-grid,
   .campaign-grid,
-  .metric-grid {
+  .export-grid,
+  .metric-grid,
+  .preview-status,
+  .export-metrics {
     grid-template-columns: 1fr;
   }
 

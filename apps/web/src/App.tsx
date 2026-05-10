@@ -4,9 +4,10 @@ import { ReviewQueue } from "./components/ReviewQueue.js";
 import { CampaignScreen } from "./screens/CampaignScreen.js";
 import { DirectoryScreen } from "./screens/DirectoryScreen.js";
 import { ImportScreen } from "./screens/ImportScreen.js";
+import { TabulatorPreviewScreen } from "./screens/TabulatorPreviewScreen.js";
 import type { ApiRecord, Client, ResourceName, ReviewItem } from "./types.js";
 
-type Screen = ResourceName | "dashboard" | "imports" | "review" | "campaigns";
+type Screen = ResourceName | "dashboard" | "imports" | "review" | "campaigns" | "exports";
 
 const navItems: Array<{ id: Screen; label: string }> = [
   { id: "dashboard", label: "Dashboard" },
@@ -16,7 +17,8 @@ const navItems: Array<{ id: Screen; label: string }> = [
   { id: "tags", label: "Tags" },
   { id: "campaigns", label: "Campaigns" },
   { id: "imports", label: "Imports" },
-  { id: "review", label: "Review Queue" }
+  { id: "review", label: "Review Queue" },
+  { id: "exports", label: "Exports" }
 ];
 
 const resourceScreens = new Set(["journalists", "outlets", "articles", "tags"]);
@@ -180,6 +182,7 @@ export function App() {
           <div className="actions">
             <button onClick={() => setScreen("imports")}>Import records</button>
             <button onClick={() => setScreen("review")}>Review proposals</button>
+            <button className="secondary" onClick={() => setScreen("exports")}>Preview Tabulator bundle</button>
             <button className="secondary" disabled={isBusy} onClick={createTraceClient}>{isBusy ? "Adding client" : "Add Trace Finance client"}</button>
           </div>
         </section>
@@ -232,6 +235,10 @@ export function App() {
 
       {screen === "campaigns" && (
         <CampaignScreen activeClient={activeClient} />
+      )}
+
+      {screen === "exports" && (
+        <TabulatorPreviewScreen />
       )}
     </main>
   );

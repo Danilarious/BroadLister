@@ -1,4 +1,4 @@
-import type { ApiRecord, CampaignWorkspace, CsvPreview, ImportBatch, OntologyImportResult, OntologySnapshotPreview, ResourceName, ReviewContext, ReviewItem, UrlIngestResult } from "./types.js";
+import type { ApiRecord, CampaignWorkspace, CsvPreview, ImportBatch, OntologyImportResult, OntologySnapshotPreview, ResourceName, ReviewContext, ReviewItem, TabulatorExportPreview, UrlIngestResult } from "./types.js";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`/api${path}`, {
@@ -116,4 +116,21 @@ export function exportUrl(clientId: string, listId: string, kind: "media-list.cs
 
 export function clientExportUrl(clientId: string, kind: "source-audit.md" | "approval-log.md"): string {
   return `/api/exports/${clientId}/${kind}`;
+}
+
+export function getTabulatorExportPreview(params: {
+  export_id?: string;
+  generated_at?: string;
+  exported_by?: string;
+  source_tag_or_commit?: string;
+  article_ids?: string[];
+} = {}): Promise<TabulatorExportPreview> {
+  const query = new URLSearchParams();
+  if (params.export_id) query.set("export_id", params.export_id);
+  if (params.generated_at) query.set("generated_at", params.generated_at);
+  if (params.exported_by) query.set("exported_by", params.exported_by);
+  if (params.source_tag_or_commit) query.set("source_tag_or_commit", params.source_tag_or_commit);
+  if (params.article_ids?.length) query.set("article_ids", params.article_ids.join(","));
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  return request<TabulatorExportPreview>(`/tabulator/export/preview${suffix}`);
 }
