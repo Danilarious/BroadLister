@@ -69,6 +69,39 @@ export type UrlIngestResult = {
   summary: UrlIngestSummary;
 };
 
+export type OntologyPreviewRow = {
+  source_system: string;
+  source_version: string;
+  source_record_id: string;
+  name: string;
+  kind: string;
+  external_id?: string;
+  concept_slug: string;
+  suggested_tag_slug: string;
+  suggested_match?: {
+    id: string;
+    slug: string;
+    name: string;
+    kind: string;
+  };
+  confidence: "low" | "medium" | "high";
+  reason: string;
+};
+
+export type OntologySnapshotPreview = {
+  schema: "BroadListerOntologySnapshotPreview.v1";
+  source_system: string;
+  source_version: string;
+  concept_count: number;
+  rows: OntologyPreviewRow[];
+};
+
+export type OntologyImportResult = {
+  import_batch: ImportBatch;
+  review_items: ReviewItem[];
+  preview: OntologySnapshotPreview;
+};
+
 export type Client = ApiRecord & {
   slug: string;
   display_name: string;

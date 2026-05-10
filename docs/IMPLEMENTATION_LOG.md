@@ -986,6 +986,7 @@ Started branch `phase-3-hardening-browser` from `phase-3-ui-polish-complete`. St
 - `docs/BROADLISTER_OPERATOR_RUNBOOK.md`
 - `docs/BROADLISTER_NEXT_DEVELOPMENT_PLAN.md`
 - `docs/IMPLEMENTATION_LOG.md`
+- `e2e/broadlister-smoke.spec.ts`
 - `/home/bxby/.codex/skills/browser-ui-validation/SKILL.md`
 
 ### Commands Run
@@ -1253,3 +1254,111 @@ Started branch `phase-4-ontology-alignment-planning` from `phase-4-reconciliatio
 ### Next Recommended Action
 
 - Incorporate Hermes review response, run docs/git verification, commit, tag, and push the planning package.
+
+---
+
+## 2026-05-09T21:02:24-07:00 — Bridge A Ontology Snapshot Import
+
+### Action
+
+Started branch `phase-4-ontology-snapshot-import` from `phase-4-ontology-alignment-planning-complete`. Implemented static local JSON ontology snapshot preview/import. Preview shows source system/version, concept name/kind, external ID, suggested local BroadLister tag match, confidence, and reason. Commit creates `ImportBatch(source_type='ontology_snapshot')`, `ImportBatchRow`, and `ReviewItem(kind='ontology_mapping_candidate')` only. Approval creates or matches a local `Tag` and updates only `Tag.external_ids_json`. Reject/defer mutates no tags.
+
+### Files Changed
+
+- `apps/api/src/routes/imports.ts`
+- `apps/api/src/services/ontology-snapshot.ts`
+- `apps/api/src/services/review.ts`
+- `apps/api/test/ontology-snapshot.test.ts`
+- `apps/web/src/api.ts`
+- `apps/web/src/components/ReviewQueue.tsx`
+- `apps/web/src/screens/ImportScreen.tsx`
+- `apps/web/src/types.ts`
+- `docs/fixtures/ontology-snapshot.v1.example.json`
+- `docs/BROADLISTER_ONTOLOGY_ALIGNMENT_PLAN.md`
+- `docs/BROADLISTER_PROJECTRECKONER_BRIDGE_PLAN.md`
+- `docs/BROADLISTER_OPERATOR_RUNBOOK.md`
+- `docs/BROADLISTER_NEXT_DEVELOPMENT_PLAN.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `git checkout -b phase-4-ontology-snapshot-import`: exit 0
+- `pnpm --filter @broadlister/api test -- ontology-snapshot.test.ts`: exit 1; fixed fixture parse assertion
+- `pnpm --filter @broadlister/api typecheck && pnpm --filter @broadlister/api test -- ontology-snapshot.test.ts`: exit 0
+
+### Tests Run
+
+- API tests: 9 files, 34 tests passed.
+- New ontology snapshot tests cover parse, preview, review item creation, approval updating `Tag.external_ids_json`, reject/defer non-mutation, malformed snapshot errors, and no network calls.
+- Cross-client leakage integration test: pass.
+
+### Hermes / Sevenfold
+
+- No new Hermes/sevenfold gate triggered. Implementation follows the prior Hermes PASS conditions: static snapshot/file route, no runtime coupling, no external writes, review-gated only.
+
+### Blockers / Stopping Conditions
+
+- None. No network calls, external writes, credentials, schema migration, systemd change, outreach behavior, or client-overlay promotion introduced.
+
+### Rollback Notes
+
+- Revert the forthcoming branch commit to remove Bridge A.
+- No migration was added.
+- Approved test mappings affect only local `Tag.external_ids_json`; restore from latest backup if test data cleanup is needed.
+
+### Next Recommended Action
+
+- Run full verification stack, backup DB, commit, tag, push, then stop for Bo review.
+
+---
+
+## 2026-05-09T21:05:15-07:00 — Bridge A Final Verification
+
+### Action
+
+Completed full Bridge A verification and backup. Fixed one E2E selector ambiguity after adding ontology import controls; no product behavior change.
+
+### Files Changed
+
+- `docs/IMPLEMENTATION_LOG.md`
+- `e2e/broadlister-smoke.spec.ts`
+
+### Commands Run
+
+- `pnpm verify`: exit 0
+- `pnpm check:global-models && pnpm check:denylist && pnpm build`: exit 0
+- `pnpm test:e2e`: exit 1; strict locator ambiguity for `Snapshot JSON` label
+- `pnpm test:e2e`: exit 0 after selector fix
+- `pnpm test:mobile`: exit 0
+- `pnpm verify:full`: exit 0
+- `pnpm backup:db`: exit 0
+
+### Tests Run
+
+- API tests: 9 files, 34 tests passed.
+- Web unit tests: 1 file, 3 tests passed.
+- Playwright E2E: 8 tests passed.
+- Mobile Playwright: 4 tests passed.
+- Global-model guard: pass.
+- Dependency deny-list guard: pass.
+- Cross-client leakage integration test: pass.
+
+### Backup
+
+- `/home/bxby/development/BroadLister/data/backups/broadlister-2026-05-10T04-05-15-398Z.sqlite`
+
+### Hermes / Sevenfold
+
+- No new review gate triggered. Bridge remains local, static, review-gated, and docs/API/UI only inside BroadLister.
+
+### Blockers / Stopping Conditions
+
+- None.
+
+### Rollback Notes
+
+- Revert the forthcoming commit and restore the backup above if local test data needs rollback.
+
+### Next Recommended Action
+
+- Commit and tag `phase-4-ontology-snapshot-import-complete`.

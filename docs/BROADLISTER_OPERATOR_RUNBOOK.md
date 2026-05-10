@@ -88,6 +88,42 @@ Safety behavior:
 - Client relevance applies only as client-scoped notes.
 - BroadLister still does not send outreach or sync Gmail.
 
+## Ontology Snapshot Import
+
+Use this only for static local JSON snapshots. BroadLister does not call ontology-core, Tabulator, Bucketer, ProjectReckoner, Hermes, or sevenfold.
+
+Workflow:
+
+1. Open `Imports`.
+2. Use `Static ontology snapshot`.
+3. Upload a `.json` file or paste JSON text.
+4. Click `Preview ontology`.
+5. Inspect source system, source version, concept kind, external ID, suggested BroadLister tag match, confidence, and reason.
+6. Click `Create mapping review items`.
+7. Open Review Queue filtered to the import batch.
+8. Approve only mappings that should update local tag external references.
+
+API:
+
+```bash
+POST /api/imports/ontology/preview
+POST /api/imports/ontology
+```
+
+Fixture:
+
+```text
+docs/fixtures/ontology-snapshot.v1.example.json
+```
+
+Approval behavior:
+
+- Creates or matches a local `Tag` by slug/name.
+- Updates only `Tag.external_ids_json`.
+- Does not write external systems.
+- Does not create client tags, campaign narrative fields, outreach status, or client notes.
+- Reject/defer mutates no tags.
+
 ## Access From Mac
 
 Safest default access is an SSH tunnel from the Mac to the ThinkPad:

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { importCsv, ingestUrl, previewCsv } from "../api.js";
-import type { CsvPreview, UrlIngestResult } from "../types.js";
+import { importCsv, importOntologySnapshot, ingestUrl, previewCsv, previewOntologySnapshot } from "../api.js";
+import type { CsvPreview, OntologySnapshotPreview, UrlIngestResult } from "../types.js";
 
 type Props = {
   onImported: (batchId?: string) => void;
@@ -13,6 +13,32 @@ type ImportStatus = {
 };
 
 const starterCsv = "name,outlet,role,email,beat,location,profile url,notes\nJane Reporter,Example Daily,Reporter,jane@example.com,stablecoins,Brazil,https://example.com/jane,Trace-relevant source\n";
+const starterOntologySnapshot = JSON.stringify({
+  schema: "BroadListerOntologySnapshot.v1",
+  source_system: "ontology-core",
+  source_version: "fixture-2026-05",
+  exported_at: "2026-05-10T00:00:00.000Z",
+  concepts: [
+    {
+      concept_id: "entity_fixture_crypto_policy",
+      concept_slug: "crypto-policy",
+      label: "Crypto policy",
+      kind: "beat",
+      relationship_to_ontology: "exact",
+      confidence: "high",
+      rationale: "Public media beat taxonomy fixture"
+    },
+    {
+      concept_id: "entity_fixture_stablecoins",
+      concept_slug: "stablecoins",
+      label: "Stablecoins",
+      kind: "topic",
+      relationship_to_ontology: "exact",
+      confidence: "high",
+      rationale: "Public topic taxonomy fixture"
+    }
+  ]
+}, null, 2);
 
 function entityKinds(result?: UrlIngestResult): string[] {
   return result?.review_items.map((item) => item.kind).filter((kind, index, all) => all.indexOf(kind) === index) ?? [];
@@ -28,6 +54,9 @@ export function ImportScreen({ onImported, onOpenReview }: Props) {
   const [busy, setBusy] = useState<"csv-preview" | "csv-import" | "url" | undefined>();
   const [lastUrlResult, setLastUrlResult] = useState<UrlIngestResult>();
   const [lastBatchId, setLastBatchId] = useState<string>();
+  const [ontologyJson, setOntologyJson] = useState(starterOntologySnapshot);
+  const [ontologyFileName, setOntologyFileName] = useState<string>();
+  const [ontologyPreview, setOntologyPreview] = useState<OntologySnapshotPreview>();
 
   async function loadCsvFile(file?: File) {
     if (!file) return;
@@ -35,6 +64,14 @@ export function ImportScreen({ onImported, onOpenReview }: Props) {
     setCsvPreview(undefined);
     setStatus({ kind: "info", message: `Loaded ${file.name}. Preview before creating review items.` });
     setCsv(await file.text());
+  }
+
+  async function loadOntologyFile(file?: File) {
+    if (!file) return;
+    setOntologyFileName(file.name);
+    setOntologyPreview(undefined);
+    setStatus({ kind: "info", message: `Loaded ${file.name}. Preview before creating ontology mapping review items.` });
+    setOntologyJson(await file.text());
   }
 
   async function submitPreview() {
@@ -83,6 +120,38 @@ export function ImportScreen({ onImported, onOpenReview }: Props) {
         message: `Created ${result.review_items.length} review proposals for "${result.summary.article_title}".`
       });
       onImported(result.import_batch?.id);
+    } catch (error) {
+      setStatus({ kind: "error", message: readableError(error) });
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
+  async function submitOntologyPreview() {
+    setBusy("csv-preview");
+    setStatus(undefined);
+    try {
+      const preview = await previewOntologySnapshot({ label: ontologyFileName, snapshot_json: ontologyJson });
+      setOntologyPreview(preview);
+      setStatus({ kind: "success", message: `Ontology preview ready: ${preview.concept_count} concepts from ${preview.source_system}.` });
+    } catch (error) {
+      setStatus({ kind: "error", message: readableError(error) });
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
+  async function submitOntologyImport() {
+    setBusy("csv-import");
+    setStatus(undefined);
+    try {
+      const result = await importOntologySnapshot({
+        label: ontologyFileName ? `Ontology snapshot ${ontologyFileName}` : `Ontology snapshot ${new Date().toISOString()}`,
+        snapshot_json: ontologyJson
+      });
+      setLastBatchId(result.import_batch.id);
+      setStatus({ kind: "success", message: `Created ${result.review_items.length} ontology mapping review items.` });
+      onImported(result.import_batch.id);
     } catch (error) {
       setStatus({ kind: "error", message: readableError(error) });
     } finally {
@@ -139,6 +208,43 @@ export function ImportScreen({ onImported, onOpenReview }: Props) {
             {lastUrlResult.summary.authors.length > 0 && <span>Byline: {lastUrlResult.summary.authors.join(", ")}</span>}
             {lastUrlResult.summary.tags.length > 0 && <span>Candidate tags: {lastUrlResult.summary.tags.join(", ")}</span>}
             {lastUrlResult.summary.client_relevance && <span>{lastUrlResult.summary.client_relevance}</span>}
+          </div>
+        )}
+      </div>
+
+      <div className="panel import-panel">
+        <p className="eyebrow">Ontology bridge</p>
+        <h2>Static ontology snapshot</h2>
+        <p className="muted">Upload or paste a local JSON snapshot. BroadLister previews deterministic tag mappings, then creates review items only. No network calls, no external writes, no automatic approval.</p>
+        <label>
+          Snapshot JSON file
+          <input accept=".json,application/json" type="file" onChange={(event) => void loadOntologyFile(event.target.files?.[0])} />
+        </label>
+        <label>
+          Snapshot JSON
+          <textarea value={ontologyJson} onChange={(event) => {
+            setOntologyJson(event.target.value);
+            setOntologyPreview(undefined);
+          }} />
+        </label>
+        <div className="actions">
+          <button disabled={Boolean(busy)} onClick={submitOntologyPreview}>{busy === "csv-preview" ? "Previewing" : "Preview ontology"}</button>
+          <button className="secondary" disabled={Boolean(busy) || !ontologyPreview} onClick={submitOntologyImport}>{busy === "csv-import" ? "Creating review items" : "Create mapping review items"}</button>
+        </div>
+        {ontologyPreview && (
+          <div className="import-result">
+            <strong>{ontologyPreview.concept_count} concepts ready</strong>
+            <span>Source: {ontologyPreview.source_system} {ontologyPreview.source_version}</span>
+            <div className="preview-list">
+              {ontologyPreview.rows.slice(0, 8).map((row) => (
+                <div className="field-row" key={row.source_record_id}>
+                  <strong>{row.name} <span className="badge">{row.kind}</span></strong>
+                  <span>{row.external_id ?? row.concept_slug}</span>
+                  <span>BroadLister: {row.suggested_match ? `${row.suggested_match.name} (${row.suggested_match.slug})` : row.suggested_tag_slug}</span>
+                  <small className="muted">{row.confidence}: {row.reason}</small>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

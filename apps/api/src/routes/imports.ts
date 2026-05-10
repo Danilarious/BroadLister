@@ -3,11 +3,17 @@ import { parse } from "csv-parse/sync";
 import { z } from "zod";
 import { normalizeText, slugify } from "../core/normalize.js";
 import { prisma } from "../db/prisma.js";
+import { commitOntologySnapshot, previewOntologySnapshot } from "../services/ontology-snapshot.js";
 
 const csvBody = z.object({
   label: z.string().min(1),
   csv: z.string().min(1),
   mapping: z.record(z.string()).default({})
+});
+
+const ontologySnapshotBody = z.object({
+  label: z.string().min(1).optional(),
+  snapshot_json: z.string().min(1)
 });
 
 const supportedMappings = new Set([
@@ -66,6 +72,24 @@ function mapRow(row: Record<string, string>, mapping: Record<string, string>): R
 }
 
 export async function registerImportRoutes(app: FastifyInstance): Promise<void> {
+  app.post("/imports/ontology/preview", async (request, reply) => {
+    const body = ontologySnapshotBody.parse(request.body);
+    try {
+      return await previewOntologySnapshot(body.snapshot_json);
+    } catch (error) {
+      return reply.code(400).send({ error: "malformed_ontology_snapshot", message: (error as Error).message });
+    }
+  });
+
+  app.post("/imports/ontology", async (request, reply) => {
+    const body = ontologySnapshotBody.parse(request.body);
+    try {
+      return reply.code(201).send(await commitOntologySnapshot(body.snapshot_json, body.label));
+    } catch (error) {
+      return reply.code(400).send({ error: "malformed_ontology_snapshot", message: (error as Error).message });
+    }
+  });
+
   app.post("/imports/csv/preview", async (request, reply) => {
     const body = csvBody.parse(request.body);
     try {

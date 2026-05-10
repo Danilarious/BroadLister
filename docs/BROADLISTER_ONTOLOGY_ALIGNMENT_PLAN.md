@@ -81,7 +81,43 @@ BroadLister should not map every tag to ontology-core immediately. Use three tie
 
 ## Proposed Local Mapping Shape
 
-Future implementation can start with a JSON-backed mapping file or local table. JSON is safer first because it avoids migration pressure and keeps the bridge reversible.
+The Bridge A implementation uses a static JSON snapshot pasted into the UI or loaded from a local browser file. The API receives JSON text; it does not read server-side paths and does not make network calls.
+
+Snapshot format:
+
+```ts
+interface BroadListerOntologySnapshot {
+  schema: "BroadListerOntologySnapshot.v1";
+  source_system: "ontology-core" | "tabulator" | "operator-curated";
+  source_version: string;
+  exported_at?: string;
+  concepts: Array<{
+    source_record_id?: string;
+    concept_id?: string;
+    concept_slug: string;
+    label: string;
+    kind: "beat" | "topic" | "format" | "region" | "language" | "broad" | "specific";
+    description?: string;
+    relationship_to_ontology?: "exact" | "broader" | "narrower" | "related" | "none";
+    ontology_core_id?: string;
+    ontology_core_slug?: string;
+    tabulator_tag_id?: string;
+    tabulator_normalized_name?: string;
+    broadlister_tag_slug?: string;
+    confidence?: "low" | "medium" | "high";
+    rationale?: string;
+    provenance?: Record<string, unknown>;
+  }>;
+}
+```
+
+Committed fixture:
+
+- `docs/fixtures/ontology-snapshot.v1.example.json`
+
+Preview output shows source system, source version, concept name/kind, external ID, suggested BroadLister tag slug, deterministic match if one exists, confidence, and reason.
+
+Future implementations may promote this to a local table if operator use proves a need. JSON is safer first because it avoids migration pressure and keeps the bridge reversible.
 
 ```ts
 interface BroadListerOntologyMapping {
@@ -122,9 +158,25 @@ Accepted mappings can later be copied into `Tag.external_ids_json`, but only aft
 1. Operator imports a snapshot or local mapping file.
 2. BroadLister creates `ReviewItem(kind='ontology_mapping_candidate')` records.
 3. Review context shows local tag, external concept, relationship type, confidence, and source snapshot.
-4. Approval stores mapping metadata locally.
+4. Approval creates or matches a local `Tag` by slug/name and updates only `Tag.external_ids_json`.
 5. Rejection/defer does not mutate the local `Tag`.
 6. No external system is called or written.
+
+Approved external metadata uses this local JSON shape inside `Tag.external_ids_json`:
+
+```json
+{
+  "ontology_core_id": "entity_fixture_crypto_policy",
+  "ontology_core_slug": "crypto-policy",
+  "tabulator_tag_id": "optional",
+  "tabulator_normalized_name": "optional",
+  "mapping_state": "approved",
+  "mapping_version": "fixture-2026-05",
+  "mapping_source_system": "ontology-core",
+  "relationship_to_ontology": "exact",
+  "reviewed_via": "BroadLister review queue"
+}
+```
 
 ## Guardrails For Client Relevance
 
@@ -153,13 +205,13 @@ Reasoning:
 - Tabulator and Bucketer already have shapes that can accept link/signal contracts later, but mapping/client-scope mistakes would be costly.
 - A read-only mapping snapshot builds confidence without runtime coupling or external writes.
 
-Do not start `B`, `C`, or `D` until the mapping contract is reviewed against real BroadLister tags and at least one fixture proves no client overlay data leaks.
+Bridge A is now the active minimal implementation. Do not start `B`, `C`, or `D` until this mapping path has been used on real BroadLister tags and leakage tests prove no client overlay data can be promoted.
 
 ## Acceptance Criteria For Next Implementation
 
-- A versioned mapping snapshot format exists in docs and fixtures.
-- Import creates review items only.
-- Approval stores mappings locally only.
+- A versioned mapping snapshot format exists in docs and fixtures. Done for `BroadListerOntologySnapshot.v1`.
+- Import creates review items only. Done through `/imports/ontology`.
+- Approval stores mappings locally only. Done through `Tag.external_ids_json`.
 - BroadLister passes verification with ProjectReckoner, Tabulator, Bucketer, Hermes, and sevenfold stopped.
 - Tests prove client relevance and campaign narrative fields cannot be emitted as global tag mappings.
 - No network calls to ProjectReckoner/Tabulator/Bucketer.

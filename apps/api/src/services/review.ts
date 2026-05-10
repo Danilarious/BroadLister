@@ -2,7 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { normalizeText, sha256 } from "../core/normalize.js";
 import { prisma } from "../db/prisma.js";
 
-type ReviewModel = "journalist" | "outlet" | "article" | "tag" | "contactMethod" | "byline" | "articleTag" | "clientRelevance";
+type ReviewModel = "journalist" | "outlet" | "article" | "tag" | "contactMethod" | "byline" | "articleTag" | "clientRelevance" | "ontologyMapping";
 
 type ReviewProposal =
   | { action: "create"; model: "journalist" | "outlet" | "article" | "tag" | "contactMethod"; data: Record<string, any> }
@@ -10,7 +10,8 @@ type ReviewProposal =
   | { action: "create_after_outlet_review"; model: "article"; data: Record<string, any>; blocked_reason: string }
   | { action: "attach_after_journalist_review"; model: "contactMethod"; data: Record<string, any>; blocked_reason?: string }
   | { action: "create_after_article_and_journalist_review"; model: "byline"; data: Record<string, any>; blocked_reason?: string }
-  | { action: "advisory"; model: "clientRelevance" | "articleTag"; data: Record<string, any>; blocked_reason?: string };
+  | { action: "advisory"; model: "clientRelevance" | "articleTag"; data: Record<string, any>; blocked_reason?: string }
+  | { action: "apply_external_ids"; model: "ontologyMapping"; data: Record<string, any> };
 
 type Match = {
   model: ReviewModel;
@@ -79,6 +80,7 @@ async function applyProposal(proposal: ReviewProposal): Promise<unknown> {
   if (proposal.model === "byline" && proposal.action === "create_after_article_and_journalist_review") return createOrMatchByline(proposal.data);
   if (proposal.model === "articleTag" && proposal.action === "advisory") return createOrMatchArticleTag(proposal.data);
   if (proposal.model === "clientRelevance" && proposal.action === "advisory") return createClientRelevanceNote(proposal.data);
+  if (proposal.model === "ontologyMapping" && proposal.action === "apply_external_ids") return applyOntologyMapping(proposal.data);
 
   throw new Error("Unsupported review proposal action.");
 }
@@ -102,6 +104,7 @@ async function buildReviewContext(proposal: ReviewProposal): Promise<ReviewConte
   if (proposal.model === "byline") dependencies.push(...await bylineDependencies(data));
   if (proposal.model === "articleTag") dependencies.push(...await articleTagDependencies(data));
   if (proposal.model === "clientRelevance") dependencies.push(...await clientRelevanceDependencies(data));
+  if (proposal.model === "ontologyMapping") matches.push(...await ontologyMappingMatches(data));
 
   const missing = dependencies.some((dependency) => dependency.status === "missing");
   return {
@@ -210,6 +213,37 @@ async function createClientRelevanceNote(data: Record<string, any>) {
   });
 }
 
+async function applyOntologyMapping(data: Record<string, any>) {
+  const existing = (await ontologyMappingMatches(data))[0];
+  const tag = existing
+    ? await prisma.tag.findUniqueOrThrow({ where: { id: existing.id } })
+    : await prisma.tag.create({
+      data: {
+        name: String(data.name),
+        slug: String(data.suggested_tag_slug),
+        kind: String(data.kind),
+        description: data.description ? String(data.description) : undefined
+      }
+    });
+  const currentExternalIds = tag.external_ids_json ? JSON.parse(tag.external_ids_json) as Record<string, unknown> : {};
+  const nextExternalIds = {
+    ...currentExternalIds,
+    ontology_core_id: data.ontology_core_id ?? currentExternalIds.ontology_core_id,
+    ontology_core_slug: data.ontology_core_slug ?? data.concept_slug ?? currentExternalIds.ontology_core_slug,
+    tabulator_tag_id: data.tabulator_tag_id ?? currentExternalIds.tabulator_tag_id,
+    tabulator_normalized_name: data.tabulator_normalized_name ?? currentExternalIds.tabulator_normalized_name,
+    mapping_state: "approved",
+    mapping_version: data.source_version,
+    mapping_source_system: data.source_system,
+    relationship_to_ontology: data.relationship_to_ontology ?? "exact",
+    reviewed_via: "BroadLister review queue"
+  };
+  return prisma.tag.update({
+    where: { id: tag.id },
+    data: { external_ids_json: JSON.stringify(nextExternalIds) }
+  });
+}
+
 async function outletMatches(data: Record<string, any>): Promise<Match[]> {
   const OR = [
     data.home_url_host ? { home_url_host: String(data.home_url_host) } : undefined,
@@ -251,6 +285,13 @@ async function tagMatches(data: Record<string, any>): Promise<Match[]> {
     take: 5
   });
   return tags.map((tag) => ({ model: "tag", id: tag.id, label: tag.name, confidence: tag.slug === data.slug ? "high" : "medium", reason: tag.slug === data.slug ? "Slug match" : "Name match" }));
+}
+
+async function ontologyMappingMatches(data: Record<string, any>): Promise<Match[]> {
+  return tagMatches({
+    slug: data.suggested_tag_slug ?? data.broadlister_tag_slug ?? data.concept_slug,
+    name: data.name
+  });
 }
 
 async function contactMethodMatches(data: Record<string, any>): Promise<Match[]> {
@@ -333,5 +374,6 @@ function summarizeProposal(proposal: ReviewProposal): string {
   if (proposal.model === "tag") return `Tag: ${data.name ?? data.slug ?? "tag"}`;
   if (proposal.model === "articleTag") return `Article tag: ${data.tag_slug ?? "tag"} on ${data.article_url_canonical ?? "article"}`;
   if (proposal.model === "clientRelevance") return `Client relevance: ${data.client_slug ?? "client"} for ${data.article_url_canonical ?? "article"}`;
+  if (proposal.model === "ontologyMapping") return `Ontology mapping: ${data.name ?? data.concept_slug ?? "tag mapping"}`;
   return "Review proposal";
 }

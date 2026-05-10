@@ -1,0 +1,26 @@
+{
+  "schema": "BroadListerOntologySnapshot.v1",
+  "source_system": "ontology-core",
+  "source_version": "fixture-2026-05",
+  "exported_at": "2026-05-10T00:00:00.000Z",
+  "concepts": [
+    {
+      "concept_id": "entity_fixture_crypto_policy",
+      "concept_slug": "crypto-policy",
+      "label": "Crypto policy",
+      "kind": "beat",
+      "relationship_to_ontology": "exact",
+      "confidence": "high",
+      "rationale": "Public media beat taxonomy fixture"
+    },
+    {
+      "concept_id": "entity_fixture_stablecoins",
+      "concept_slug": "stablecoins",
+      "label": "Stablecoins",
+      "kind": "topic",
+      "relationship_to_ontology": "exact",
+      "confidence": "high",
+      "rationale": "Public topic taxonomy fixture"
+    }
+  ]
+}

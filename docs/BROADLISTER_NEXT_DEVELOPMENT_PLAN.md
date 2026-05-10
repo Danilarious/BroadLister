@@ -2,26 +2,25 @@
 
 ## Recommended Next Phase
 
-Next phase after this planning package should be `A1) read-only ontology mapping snapshot review`.
+Next phase should be either `A1.1) ontology import refinement` or `B) Tabulator reviewed-artifact export planning`, depending on Bo's review of the snapshot workflow.
 
 The browser-validation and hardening pass added Playwright coverage, expanded API hardening tests, documented Tailscale access, and preserved the no-outreach and cross-client safety posture. The import-ingestion pass added deterministic, review-gated URL article ingestion and CSV contact imports. The reconciliation pass added deterministic duplicate matching, linked approval resolution, import batch filtering, defer/reject paths, and review queue context panels. No additional hardening block is currently severe enough to defer ontology planning.
 
 This planning package defines alignment contracts for ontology-core, Tabulator, and Bucketer. It does not hard-couple BroadLister to ProjectReckoner, Tabulator, TaskReckoner, Bucketer, Hermes, or sevenfold at runtime.
 
-Recommended implementation branch after Bo approval: `phase-4-ontology-mapping-snapshot`.
+Implemented branch: `phase-4-ontology-snapshot-import`.
 
 ## Objective
 
-Implement the smallest safe bridge: a local, read-only ontology/tag mapping snapshot intake that creates BroadLister review items and stores accepted mappings locally. No external API calls or package-level runtime dependency.
+Bridge A now implements the smallest safe bridge: a local, read-only ontology/tag mapping snapshot intake that creates BroadLister review items and stores accepted mappings locally. No external API calls or package-level runtime dependency.
 
 ## Proposed Workstreams
 
-1. Add a fixture-backed `BroadListerOntologyMapping.v1` JSON snapshot format.
-2. Add an import preview that detects matching local tags by slug/name.
-3. Create `ReviewItem(kind='ontology_mapping_candidate')` rows only.
-4. Add review approval behavior that stores approved external references locally, likely in `Tag.external_ids_json` or a small local mapping table.
-5. Add leakage tests proving client relevance, campaign narrative fit, outreach status, and client notes cannot be emitted as global mappings.
-6. Add independence tests proving BroadLister verifies with ProjectReckoner, Tabulator, Bucketer, Hermes, and sevenfold stopped.
+1. Validate Bridge A with a real operator-curated ontology snapshot.
+2. Decide whether conflict display needs refinement before broader use.
+3. Add optional fixture examples for Tabulator tag snapshots if Bo wants Tabulator mapping coverage before exports.
+4. If Bridge A feels sufficient, move to Tabulator reviewed-artifact export planning.
+5. Keep Bucketer imports and monitoring hints deferred until Tabulator artifact shape is proven.
 
 ## Likely Architecture
 
@@ -74,12 +73,12 @@ Implement the smallest safe bridge: a local, read-only ontology/tag mapping snap
 
 ## Suggested First Implementation After Approval
 
-If Bo approves implementation after this planning phase, start with:
+Bridge A implementation now includes:
 
-- `docs/fixtures/ontology-mapping-snapshot.v1.example.json` or equivalent.
+- `docs/fixtures/ontology-snapshot.v1.example.json`.
 - API preview/commit route for local mapping snapshots, creating review items only.
 - Review context for mapping candidates.
-- Approved mapping storage in `Tag.external_ids_json` unless a migration for a local `OntologyMapping` table is explicitly approved.
-- Tests that prevent mapped campaign-only concepts from entering global records or generic Tabulator/Bucketer artifacts.
+- Approved mapping storage in `Tag.external_ids_json`.
+- Tests for parse, preview, review item creation, approval mutation, reject/defer non-mutation, malformed snapshots, no network calls, and cross-client leakage.
 
-Do not implement this until Bo explicitly approves the next development phase.
+Recommended next after Bo review: Tabulator export planning if Bridge A feels adequate; otherwise do one refinement pass on ontology import conflict UX and fixture coverage.

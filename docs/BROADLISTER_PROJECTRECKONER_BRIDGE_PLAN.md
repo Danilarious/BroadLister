@@ -82,12 +82,23 @@ Near-term storage:
 - Keep `client_relevance` tags advisory and review-gated.
 - Do not validate against ontology-core at runtime yet.
 
+Implemented Bridge A shape:
+
+- API preview: `POST /imports/ontology/preview`
+- API commit: `POST /imports/ontology`
+- Source type: `ontology_snapshot`
+- Review item kind: `ontology_mapping_candidate`
+- Approved mutation: local `Tag.external_ids_json` only
+- Fixture: `docs/fixtures/ontology-snapshot.v1.example.json`
+
+The API accepts JSON text from a browser upload/paste. It does not read ProjectReckoner files, import ontology-core packages, call external APIs, or write to external systems.
+
 ## Recommended Bridge Sequence
 
 Current recommendation after inspecting BroadLister, ontology-core, Tabulator, and Bucketer:
 
 1. Complete contract docs only in this phase.
-2. Next approved implementation: read-only ontology/tag mapping snapshot import into BroadLister review queue.
+2. Current implementation: read-only ontology/tag mapping snapshot import into BroadLister review queue.
 3. Then export reviewed BroadLister media artifacts to Tabulator-compatible files.
 4. Then Bucketer-to-BroadLister signal candidate import.
 5. Last: BroadLister-to-Bucketer monitoring hints.
@@ -135,9 +146,9 @@ Primary interface shapes:
 
 ### Phase B: Advisory mapping
 
-- Add ontology mapping UI or mapping file.
-- Store external IDs in JSON fields.
-- Add review queue items for mapping proposals.
+- Exercise Bridge A on real exported mapping snapshots.
+- Add operator refinements only if needed, such as clearer mapping conflict display.
+- Keep external IDs in JSON fields unless Bo approves a migration.
 
 ### Phase C: Operator-triggered bridge
 

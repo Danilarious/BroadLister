@@ -66,6 +66,8 @@ test("import and review screens expose labeled operator controls", async ({ page
   await expect(page.getByLabel("CSV rows")).toBeVisible();
   await expect(page.getByLabel("Article URL")).toBeVisible();
   await expect(page.getByLabel("Optional pasted HTML for local/offline extraction testing")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Snapshot JSON" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Preview ontology" })).toBeEnabled();
   await expect(page.getByRole("button", { name: "Preview CSV" })).toBeEnabled();
 
   await page.getByRole("button", { name: "Review Queue" }).click();

@@ -1,4 +1,4 @@
-import type { ApiRecord, CampaignWorkspace, CsvPreview, ImportBatch, ResourceName, ReviewContext, ReviewItem, UrlIngestResult } from "./types.js";
+import type { ApiRecord, CampaignWorkspace, CsvPreview, ImportBatch, OntologyImportResult, OntologySnapshotPreview, ResourceName, ReviewContext, ReviewItem, UrlIngestResult } from "./types.js";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`/api${path}`, {
@@ -66,6 +66,20 @@ export function previewCsv(payload: { label: string; csv: string; mapping?: Reco
 
 export function ingestUrl(payload: { url: string; html?: string }): Promise<UrlIngestResult> {
   return request<UrlIngestResult>("/imports/url", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function previewOntologySnapshot(payload: { label?: string; snapshot_json: string }): Promise<OntologySnapshotPreview> {
+  return request<OntologySnapshotPreview>("/imports/ontology/preview", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function importOntologySnapshot(payload: { label?: string; snapshot_json: string }): Promise<OntologyImportResult> {
+  return request<OntologyImportResult>("/imports/ontology", {
     method: "POST",
     body: JSON.stringify(payload)
   });

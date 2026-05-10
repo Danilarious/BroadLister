@@ -26,7 +26,8 @@ const kindLabels: Record<string, string> = {
   journalist_candidate: "Journalist",
   byline_candidate: "Byline",
   article_tag_candidate: "Article tag",
-  client_relevance_candidate: "Client relevance"
+  client_relevance_candidate: "Client relevance",
+  ontology_mapping_candidate: "Ontology mapping"
 };
 
 export function ReviewQueue({ reviews, selected, selectedBatchId, kindFilter, isBusy, onKindFilter, onClearBatch, onSelect, onApprove, onReject, onDefer }: Props) {
