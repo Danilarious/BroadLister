@@ -169,6 +169,18 @@ We design for *bridge-readiness*:
 
 ontology-core defines canonical concept slugs across ProjectReckoner. BroadLister's beats/topics align in spirit. v1 doesn't validate against ontology-core. v1.3 may add a one-way "ontology-core slug → BroadLister tag" sync that updates `external_ids_json.ontology_core_slug` when a match is recognized.
 
+### Future ontology bridge contract
+
+Future ontology alignment must start with a conservative bridge contract:
+
+- Read-only by default.
+- No runtime dependency on ProjectReckoner, Tabulator, Hermes, or sevenfold.
+- Store external references in `Tag.external_ids_json`; do not introduce hard foreign keys to external systems.
+- Send mapping proposals through BroadLister review queue before acceptance.
+- Do not write back to Tabulator unless Bo explicitly approves a later phase.
+- Treat ontology-core slugs as references, not validators, until a later approved phase.
+- Keep campaign-only concepts out of global tag facts.
+
 ## How tags should carry confidence, source, and scope
 
 Worked example, assertion: *"Casey Newton (`Platformer`) covers AI-product and AI-policy."*

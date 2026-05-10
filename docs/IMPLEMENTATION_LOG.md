@@ -7,6 +7,7 @@
 - Phase 2 UI for contacts/outlets/articles/tags: not started
 - Phase 3 campaign overlays and list builder: not started
 - MVP boundary: stop after Phase 3 exit
+- Phase 3 UI polish: in progress on `phase-3-ui-polish`
 
 ---
 
@@ -892,3 +893,75 @@ Phase 3 added campaign workspace APIs, client-scoped overlay UI, list building, 
 ### Next Recommended Action
 
 - Commit this MVP boundary log, tag `phase-3-complete`, push tag, and stop for Bo's review.
+
+---
+
+## 2026-05-09T18:54:46-07:00 — Phase 3 UI Polish
+
+### Action
+
+Started post-MVP UI polish from tag `phase-3-complete` on branch `phase-3-ui-polish`. Loaded the globally installed `impeccable` skill and used it as the UI rubric. Added product/design context files, refined the React UI for hierarchy, responsive layout, labeled forms, mobile-safe tables, loading/disabled states, and clearer no-outreach copy. Added BroadLister operator/Hermes/sevenfold/next-phase docs. Verified `context-mode` global skill and installed the remaining skills from `mksglu/context-mode`.
+
+### Files Changed
+
+- `PRODUCT.md`
+- `DESIGN.md`
+- `apps/web/src/App.tsx`
+- `apps/web/src/components/RecordTable.tsx`
+- `apps/web/src/components/ReviewQueue.tsx`
+- `apps/web/src/screens/CampaignScreen.tsx`
+- `apps/web/src/screens/DirectoryScreen.tsx`
+- `apps/web/src/screens/ImportScreen.tsx`
+- `apps/web/src/styles.css`
+- `apps/web/src/utils/format.ts`
+- `apps/web/src/utils/format.test.ts`
+- `docs/BROADLISTER_OPERATOR_RUNBOOK.md`
+- `docs/BROADLISTER_SEVENFOLD_AGENT_BRIEF.md`
+- `docs/BROADLISTER_HERMES_HANDOFF.md`
+- `docs/BROADLISTER_NEXT_DEVELOPMENT_PLAN.md`
+- `docs/BROADLISTER_TAGGING_AND_ONTOLOGY_MODEL.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `node /home/bxby/.codex/skills/impeccable/scripts/load-context.mjs`: exit 0
+- `pnpm verify`: exit 0 after fixing one test import extension
+- `pnpm check:global-models`: exit 0
+- `pnpm check:denylist`: exit 0
+- `pnpm build`: exit 0
+- `pnpm dev`: smoke start, ports bound to `127.0.0.1:3021` and `127.0.0.1:4100`; stopped with SIGINT
+- `hermes -z ...`: exit 0, returned `PASS`
+- `python .../install-skill-from-github.py --repo mksglu/context-mode ...`: exit 0
+- `pnpm backup:db`: exit 0; wrote `data/backups/broadlister-2026-05-10T01-56-16-705Z.sqlite`
+
+### Tests Run
+
+- `pnpm verify`: pass
+- API tests: 5 files, 10 tests passed, including real cross-client leakage integration test
+- Web tests: 1 file, 3 tests passed
+- Global model scope guard: pass
+- Dependency deny-list guard: pass
+- Build: pass
+- Phase-exit backup: `data/backups/broadlister-2026-05-10T01-56-16-705Z.sqlite`
+
+### Hermes / sevenfold Review
+
+- Hermes General/default handoff prompt sent directly via `hermes -z`.
+- Hermes returned `PASS`.
+- Hermes briefed sevenfold profile; sevenfold session `20260509_185143_9caa3c` returned `PASS with conditions`.
+- Conditions are documented in `docs/BROADLISTER_HERMES_HANDOFF.md` and preserve existing no-outreach, local-first, client-isolation, provenance, proposal-review, approval-gate, and no-runtime-coupling rules.
+
+### Blockers / Stopping Conditions
+
+- None. No destructive migrations, credentials, outbound communication paths, systemd changes, or runtime coupling introduced.
+
+### Rollback Notes
+
+- Revert the forthcoming UI polish commits on `phase-3-ui-polish`.
+- No schema migration was added.
+- No database mutation was required.
+- Context-mode skill install can be removed from `/home/bxby/.codex/skills/<skill-name>` if Bo wants to undo global skill installation.
+
+### Next Recommended Action
+
+- Run final verification after this log entry, commit the UI/docs pass, tag `phase-3-ui-polish-complete`, and push branch/tag.
