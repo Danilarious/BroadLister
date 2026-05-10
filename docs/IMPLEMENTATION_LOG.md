@@ -1950,3 +1950,54 @@ Started branch `phase-4-tabulator-offline-import-planning`. Reviewed BroadLister
 ### Next Recommended Action
 
 - Commit, tag `phase-4-tabulator-offline-import-planning-complete`, and push branch/tag.
+
+---
+
+## 2026-05-10T11:28:54-07:00 — Bucketer Bridge Planning
+
+### Action
+
+Started branch `phase-4-bucketer-bridge-planning`. Paused implementation and ran a Hermes General/default coordination pass for Bucketer/BroadLister bridge planning. Inspected Bucketer read-only and documented a file-first, review-gated bridge model in BroadLister docs.
+
+### Files Changed
+
+- `docs/BROADLISTER_BUCKETER_BRIDGE_PLAN.md`
+- `docs/BROADLISTER_BUCKETER_ENTITY_MAPPING.md`
+- `docs/BROADLISTER_NEXT_DEVELOPMENT_PLAN.md`
+- `docs/IMPLEMENTATION_LOG.md`
+
+### Commands Run
+
+- `git checkout -b phase-4-bucketer-bridge-planning`: exit 0
+- `hermes -z <full Bucketer/BroadLister investigation brief>`: killed after no stdout for several minutes
+- `hermes -z <bounded Bucketer/BroadLister architecture brief>`: exit 0
+- Bucketer read-only inspection via local Node scripts: exit 0
+- `pnpm build`: exit 0
+- `pnpm verify`: exit 0
+
+### Tests Run
+
+- Build: pass.
+- Full verify: pass.
+- API tests: 12 files, 60 tests passed.
+- Web unit tests: 2 files, 9 tests passed.
+
+### Hermes / Sevenfold
+
+- Hermes result: `PASS WITH CONDITIONS`.
+- Hermes consulted profiles: none in the bounded retry.
+- Hermes consulted skill: `adapter-agnostic-doc-reconciliation`.
+- Hermes conditions: file-first before API-backed; review queue before mutation; no contact/export/outreach leakage; no client/campaign overlay leakage; no ontology mutation from Bucketer or BroadLister in v1; stable IDs and provenance required from day one; Tabulator `validate`/`dry_run` remains the next safety layer before deeper integration.
+- sevenfold was not consulted.
+
+### Blockers / Stopping Conditions
+
+- None. The initial broad Hermes invocation hung and was replaced by a bounded Hermes review using locally inspected facts.
+
+### Rollback Notes
+
+- Revert the forthcoming documentation commit. No BroadLister code, schema, runtime integration, Bucketer repo code, ProjectReckoner repo code, external write, or contact export was added.
+
+### Next Recommended Action
+
+- Commit, tag `phase-4-bucketer-bridge-planning-complete`, and push branch/tag.
