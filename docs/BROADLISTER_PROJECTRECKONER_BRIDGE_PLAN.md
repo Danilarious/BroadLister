@@ -82,6 +82,40 @@ Near-term storage:
 - Keep `client_relevance` tags advisory and review-gated.
 - Do not validate against ontology-core at runtime yet.
 
+## Recommended Bridge Sequence
+
+Current recommendation after inspecting BroadLister, ontology-core, Tabulator, and Bucketer:
+
+1. Complete contract docs only in this phase.
+2. Next approved implementation: read-only ontology/tag mapping snapshot import into BroadLister review queue.
+3. Then export reviewed BroadLister media artifacts to Tabulator-compatible files.
+4. Then Bucketer-to-BroadLister signal candidate import.
+5. Last: BroadLister-to-Bucketer monitoring hints.
+
+Rationale:
+
+- ontology-core is the semantic spine and requires stable IDs plus reversible ontology mutations. BroadLister should reference it, not embed app-specific logic into it.
+- Tabulator and Bucketer both already have link/tag/signal concepts, but their tags are more generic than BroadLister's media ontology.
+- Mapping first reduces the chance that Bucketer signals or Tabulator links create duplicate or mis-scoped BroadLister tags.
+- File/snapshot exchange keeps BroadLister operationally independent and easy to verify with external systems stopped.
+
+## Data Contracts
+
+Detailed future adapter contracts now live in:
+
+- `BROADLISTER_ONTOLOGY_ALIGNMENT_PLAN.md`
+- `BROADLISTER_TABULATOR_BRIDGE_CONTRACT.md`
+- `BROADLISTER_BUCKETER_BRIDGE_CONTRACT.md`
+
+Primary interface shapes:
+
+- `BroadListerOntologyMapping`
+- `BroadListerTabulatorLinkCandidate`
+- `BroadListerBucketerSignalCandidate`
+- `BroadListerReviewedMediaArtifact`
+- `BroadListerClientRelevanceArtifact`
+- `BroadListerBucketerMonitoringHint`
+
 ## Near-Term Implementation Boundary
 
 - BroadLister may implement its own deterministic article URL adapter.
@@ -120,3 +154,12 @@ Near-term storage:
 - Provenance and source system are visible.
 - sevenfold domain review passes for client workflow.
 - Bo approves any implementation beyond local deterministic ingestion.
+
+## Explicit Non-Goals
+
+- No shared database.
+- No direct Tabulator write-back.
+- No direct Bucketer source/routing mutation.
+- No ontology-core package import as a required BroadLister runtime dependency.
+- No promotion of client relevance or campaign narrative into global ontology.
+- No automatic link/signal import without operator review.

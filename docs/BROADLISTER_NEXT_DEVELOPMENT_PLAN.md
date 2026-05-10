@@ -2,34 +2,34 @@
 
 ## Recommended Next Phase
 
-Next phase should be `A) ontology-core / Tabulator alignment planning`.
+Next phase after this planning package should be `A1) read-only ontology mapping snapshot review`.
 
 The browser-validation and hardening pass added Playwright coverage, expanded API hardening tests, documented Tailscale access, and preserved the no-outreach and cross-client safety posture. The import-ingestion pass added deterministic, review-gated URL article ingestion and CSV contact imports. The reconciliation pass added deterministic duplicate matching, linked approval resolution, import batch filtering, defer/reject paths, and review queue context panels. No additional hardening block is currently severe enough to defer ontology planning.
 
-This remains planning-first alignment for ontology and tagging interoperability. It should not hard-couple BroadLister to ProjectReckoner, Tabulator, TaskReckoner, Bucketer, Hermes, or sevenfold at runtime.
+This planning package defines alignment contracts for ontology-core, Tabulator, and Bucketer. It does not hard-couple BroadLister to ProjectReckoner, Tabulator, TaskReckoner, Bucketer, Hermes, or sevenfold at runtime.
 
-Recommended phase name: `phase-4-ontology-alignment-planning`.
+Recommended implementation branch after Bo approval: `phase-4-ontology-mapping-snapshot`.
 
 ## Objective
 
-Design a safe bridge between BroadLister's media ontology and the broader Sevenfold/ProjectReckoner ontology ecosystem. The first implementation should likely be read-only or advisory mapping, not shared runtime ownership.
+Implement the smallest safe bridge: a local, read-only ontology/tag mapping snapshot intake that creates BroadLister review items and stores accepted mappings locally. No external API calls or package-level runtime dependency.
 
 ## Proposed Workstreams
 
-1. Inventory BroadLister tag classes, provenance fields, and campaign overlay fields.
-2. Inventory ProjectReckoner `ontology-core` concepts and Tabulator tagging semantics.
-3. Define a mapping layer from BroadLister media tags to ontology-core identifiers.
-4. Decide which mappings are global facts and which are campaign/client interpretations.
-5. Add deterministic import/export mapping specs before any code integration.
-6. Add tests proving BroadLister still runs with ProjectReckoner, Tabulator, and Hermes stopped.
+1. Add a fixture-backed `BroadListerOntologyMapping.v1` JSON snapshot format.
+2. Add an import preview that detects matching local tags by slug/name.
+3. Create `ReviewItem(kind='ontology_mapping_candidate')` rows only.
+4. Add review approval behavior that stores approved external references locally, likely in `Tag.external_ids_json` or a small local mapping table.
+5. Add leakage tests proving client relevance, campaign narrative fit, outreach status, and client notes cannot be emitted as global mappings.
+6. Add independence tests proving BroadLister verifies with ProjectReckoner, Tabulator, Bucketer, Hermes, and sevenfold stopped.
 
 ## Likely Architecture
 
 - BroadLister owns its local SQLite database.
-- Ontology mapping starts as advisory metadata, preferably JSON-backed or a separate local mapping table.
-- ProjectReckoner ontology identifiers may be referenced as external IDs, not joined through runtime service calls.
-- Tabulator alignment should focus on taxonomy compatibility and export/import shapes.
-- Any future bridge should be operator-triggered and deterministic.
+- Ontology mapping starts as advisory metadata from versioned local snapshots.
+- ProjectReckoner ontology identifiers are referenced as external IDs, not joined through runtime service calls.
+- Tabulator alignment follows file/snapshot artifact contracts before API writes.
+- Bucketer alignment starts after ontology mapping, through signal candidate snapshots.
 
 ## Explicit Deferrals
 
@@ -74,11 +74,12 @@ Design a safe bridge between BroadLister's media ontology and the broader Sevenf
 
 ## Suggested First Implementation After Approval
 
-If Bo approves implementation after the planning phase, start with:
+If Bo approves implementation after this planning phase, start with:
 
-- A local `OntologyMapping` model or JSON-backed mapping file for advisory mappings.
-- A UI surface showing tag mapping confidence and source provenance.
-- Import/export transforms that include mapping metadata without changing existing export contracts.
-- Tests that prevent mapped campaign-only concepts from entering global records.
+- `docs/fixtures/ontology-mapping-snapshot.v1.example.json` or equivalent.
+- API preview/commit route for local mapping snapshots, creating review items only.
+- Review context for mapping candidates.
+- Approved mapping storage in `Tag.external_ids_json` unless a migration for a local `OntologyMapping` table is explicitly approved.
+- Tests that prevent mapped campaign-only concepts from entering global records or generic Tabulator/Bucketer artifacts.
 
 Do not implement this until Bo explicitly approves the next development phase.

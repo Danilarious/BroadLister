@@ -1192,3 +1192,64 @@ Started branch `phase-4-reconciliation-review` from `phase-4-import-ingestion-co
 ### Next Recommended Action
 
 - Commit, tag, and push `phase-4-reconciliation-review-complete`, then stop at the phase boundary for Bo review.
+
+---
+
+## 2026-05-09T20:53:26-07:00 — Ontology / Tabulator / Bucketer Alignment Planning
+
+### Action
+
+Started branch `phase-4-ontology-alignment-planning` from `phase-4-reconciliation-review-complete`. Inspected BroadLister docs/schema plus read-only ProjectReckoner ontology-core, Tabulator, and Bucketer docs/code. Drafted planning-only bridge contracts for ontology mapping, Tabulator link/artifact exchange, and Bucketer signal/monitoring hint exchange. No runtime integration or schema migration was added.
+
+### Files Changed
+
+- `docs/BROADLISTER_BUCKETER_BRIDGE_CONTRACT.md`
+- `docs/BROADLISTER_ONTOLOGY_ALIGNMENT_PLAN.md`
+- `docs/BROADLISTER_PROJECTRECKONER_BRIDGE_PLAN.md`
+- `docs/BROADLISTER_TABULATOR_BRIDGE_CONTRACT.md`
+- `docs/BROADLISTER_NEXT_DEVELOPMENT_PLAN.md`
+- `docs/IMPLEMENTATION_LOG.md`
+- `.hermes/plans/2026-05-09_205308-broadlister-ontology-alignment-architecture-review.md`
+
+### Commands Run
+
+- `git checkout -b phase-4-ontology-alignment-planning`: exit 0
+- Read-only inspection of BroadLister docs/schema and ProjectReckoner ontology-core/Tabulator/Bucketer docs/code: exit 0
+- `hermes -z <architecture review prompt>`: exit 0; returned PASS with conditions and wrote `.hermes/plans/2026-05-09_205308-broadlister-ontology-alignment-architecture-review.md`
+- `pnpm verify`: exit 0
+- `pnpm check:global-models && pnpm check:denylist && pnpm build`: exit 0
+
+### Tests Run
+
+- API tests: 8 files, 27 tests passed.
+- Web tests: 1 file, 3 tests passed.
+- Global model scope guard: pass.
+- Dependency deny-list guard: pass.
+- Build: pass.
+
+### Planning Conclusions
+
+- Recommended sequence: docs-only contract package first, then read-only ontology/tag mapping snapshot import into BroadLister review queue.
+- Do not start Tabulator export, Bucketer signal import, or BroadLister monitoring hints until mapping semantics and leakage tests exist.
+- Use file/snapshot contracts before any API integration.
+- Store external references locally as JSON metadata or a future local mapping table; no hard foreign keys to external systems.
+
+### Hermes / Reckoner-Dev / Sevenfold
+
+- Hermes General/default returned PASS with conditions.
+- Hermes reported a read-only reckoner-dev-style consultation and did not contact sevenfold.
+- Key conditions: keep bridges contract/file/snapshot based, no runtime dependency, no direct external writes, all imports through `ReviewItem`, all exports operator-triggered and scoped, client/campaign overlays separate from global graph facts, citations travel with all bridge payloads, external IDs remain JSON references.
+- Recommended order: docs-only now, read-only ontology import/reference first, reviewed BroadLister artifact export to Tabulator second, Bucketer-to-BroadLister article candidates later, BroadLister-to-Bucketer monitoring hints last.
+
+### Blockers / Stopping Conditions
+
+- None. This phase is docs-only and does not touch external repos, credentials, services, databases, systemd, Gmail, or outreach paths.
+
+### Rollback Notes
+
+- Revert the forthcoming planning-doc commit to remove this phase.
+- No database backup required for docs-only changes; no data mutation occurred.
+
+### Next Recommended Action
+
+- Incorporate Hermes review response, run docs/git verification, commit, tag, and push the planning package.
